@@ -7,8 +7,11 @@ package com.example.addon.modules;
 
 
 import baritone.api.BaritoneAPI;
+import javassist.expr.Instanceof;
+import net.fabricmc.loader.impl.util.log.Log;
 import net.minecraft.block.Block;
-import meteordevelopment.meteorclient.events.entity.player.BreakBlockEvent;
+import meteordevelopment.meteorclient.events.entity.DamageEvent;
+// import meteordevelopment.meteorclient.events.entity.player.BreakBlockEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixin.PlayerMoveC2SPacketAccessor;
@@ -24,7 +27,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 // import meteordevelopment.meteorclient.systems.modules.combat.Offhand.Item;
 import meteordevelopment.meteorclient.systems.modules.movement.Flight;
-import meteordevelopment.meteorclient.systems.modules.player.Reach;
+// import meteordevelopment.meteorclient.systems.modules.player.Reach;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
@@ -36,27 +39,24 @@ import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.BitSetVoxelSet;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.item.Item;
-import java.io.Console;
-import java.lang.System.Logger;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import net.fabricmc.loader.impl.lib.sat4j.core.Vec;
-import net.minecraft.advancement.criterion.PlayerHurtEntityCriterion;
+import com.google.errorprone.annotations.Var;
+
 import net.minecraft.block.Blocks;
-import net.minecraft.block.PowderSnowBlock;
+
 import net.minecraft.entity.Entity;
 
-import com.mojang.logging.LogUtils;
+import net.minecraft.block.LeavesBlock;
 
 public class NoFall extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -91,7 +91,7 @@ public class NoFall extends Module {
         .build()
     );
 
-    private boolean placedWater;
+    private boolean placedWater = false;
     public Vec3d placedpos;
     private int preBaritoneFallHeight;
     public Item[] cluchItems = {Items.LAVA_BUCKET, Items.WATER_BUCKET, Items.POWDER_SNOW_BUCKET, Items.HAY_BLOCK, Items.SLIME_BLOCK};
@@ -135,17 +135,23 @@ public class NoFall extends Module {
         Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos));
     }
 
-    public FindItemResult FindCluchItem(){
+    public FindItemResult FindCluchItem(Block landingBlock){
         FindItemResult CluchItem = null;
         for (Item cItem : cluchItems) {
             CluchItem = InvUtils.findInHotbar(cItem);
             if (CluchItem.found()){
-                if(cItem instanceof BlockItem block) isBlock = true;
+
+                if(cItem == Items.WATER_BUCKET && landingBlock instanceof LeavesBlock lb) continue;
+                if(cItem instanceof BlockItem block)isBlock = true;
                 else isBlock = false;
                 return CluchItem;
             }
         }
         return CluchItem;
+    }
+
+    public Block getBlock(BlockHitResult hit){
+        return mc.world.getBlockState(hit.getBlockPos()).getBlock();
     }
 
     @EventHandler
@@ -172,11 +178,12 @@ public class NoFall extends Module {
         }
 
         // Bucket mode
-        if (mode.get() == Mode.MLG) {
+        if (mode.get() == Mode.MLG && mc.player != null && mc.world != null) {
             if (mc.player.fallDistance > 3 && !EntityUtils.isAboveWater(mc.player) && !placedWater) {
                 // Place water
 
-                FindItemResult cluchItem = FindCluchItem();
+
+
 
 
                 // Center player
@@ -189,7 +196,7 @@ public class NoFall extends Module {
 
                 Vec3d ppos = Predict(mc.player, predict.get());
 
-                Box bb = mc.player.getBoundingBox();
+                // Box bb = mc.player.getBoundingBox();
 
                 for (int x = 0; x < 2; x++) {
                     for (int y = 0; y < 2; y++) {
@@ -214,15 +221,21 @@ public class NoFall extends Module {
 
                 }
                 // Place water
-                if (result != null && result.getType() == HitResult.Type.BLOCK &&  !cBlocks.contains(mc.world.getBlockState(result.getBlockPos()).getBlock())) {
+                if (result != null && result.getType() == HitResult.Type.BLOCK &&  !cBlocks.contains(getBlock(result))) {
+                    FindItemResult cluchItem = FindCluchItem(getBlock(result));
                     placedpos = tovec3d(result).add(0.5, 1, 0.5);
+
                     useBucket(cluchItem, true);
                 }
             }
 
             // Remove water
-            if (placedWater && mc.player.getBlockStateAtPos().getFluidState().getFluid() == Fluids.WATER || mc.player.getBlockStateAtPos().getFluidState().getFluid() == Fluids.FLOWING_WATER || mc.player.getBlockStateAtPos().getBlock() == Blocks.POWDER_SNOW || mc.player.isTouchingWater() || mc.player.isOnGround()) {
-                useBucket(InvUtils.findInHotbar(Items.BUCKET), false);
+            if (placedWater){
+
+                if (mc.player.getBlockStateAtPos().getFluidState().getFluid() == Fluids.WATER || mc.player.getBlockStateAtPos().getFluidState().getFluid() == Fluids.FLOWING_WATER || mc.player.getBlockStateAtPos().getBlock() == Blocks.POWDER_SNOW || mc.player.isTouchingWater() || mc.player.isOnGround()) {
+                    Log("trying to remove water");
+                    useBucket(InvUtils.findInHotbar(Items.BUCKET), false);
+                }
             }
         }
     }
@@ -245,25 +258,34 @@ public class NoFall extends Module {
             r.getBlockPos().getZ());
     }
     private void useBucket(FindItemResult bucket, boolean placedWater) {
-        if(placedWater) mc.player.sendChatMessage("" + placedpos, null);
         if (!bucket.found()) return;
 
         if (!placedWater) isBlock=false;
-        if(PlayerUtils.distanceTo(placedpos) > 5) return;
+        if(PlayerUtils.distanceTo(placedpos) > 4) return;
 
         Rotations.rotate(Rotations.getYaw(placedpos), Rotations.getPitch(placedpos), 100, true, () -> {
-            if (bucket.isOffhand()) {
+            if(isBlock){
+                if(isBlock)  if(BlockUtils.place(new BlockPos(placedpos), bucket, true, 0)) this.placedWater = placedWater;
+            }
+
+            else if (bucket.isOffhand()) {
                 mc.interactionManager.interactItem(mc.player, Hand.OFF_HAND);
-            } else {
+            }
+            else {
                 // int preSlot = mc.player.getInventory().selectedSlot;
                 InvUtils.swap(bucket.slot(), true);
-                if(isBlock)  BlockUtils.place(new BlockPos(placedpos), bucket, true, 0);
-                else mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                if(mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND).isAccepted())Log("" + this.placedWater + placedWater); this.placedWater = placedWater;
                 InvUtils.swapBack();
             }
 
-            this.placedWater = placedWater;
         });
+    }
+    private void onDamage(DamageEvent event) {
+
+
+        if (mode.get() == Mode.MLG && event.entity.getHealth() <= 0) {
+            placedWater = false;
+        }
     }
 
     @Override
@@ -290,5 +312,17 @@ public class NoFall extends Module {
         public boolean test(float fallheight) {
             return fallHeight.test(fallheight);
         }
+    }
+
+    public void Log(String Log){
+        mc.player.sendChatMessage(String.valueOf(Log), null);
+    }
+    public void Log(ActionResult Log){
+        mc.player.sendChatMessage(String.valueOf(Log), null);
+    }
+    public boolean Log(Boolean Log){
+        mc.player.sendChatMessage(String.valueOf(Log), null);
+        return Log;
+
     }
 }
