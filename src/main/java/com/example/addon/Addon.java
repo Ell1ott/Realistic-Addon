@@ -2,8 +2,11 @@ package com.example.addon;
 
 import com.example.addon.commands.CommandExample;
 import com.example.addon.hud.HudExample;
+import com.example.addon.modules.ESP;
 import com.example.addon.modules.ModuleExample;
 import com.example.addon.modules.NoFall;
+import com.example.addon.modules.VeinMiner;
+import com.example.addon.modules.autoFarm;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.commands.Commands;
@@ -27,6 +30,10 @@ public class Addon extends MeteorAddon {
         // Modules
         Modules.get().add(new ModuleExample());
         Modules.get().add(new NoFall());
+        Modules.get().add(new autoFarm());
+        Modules.get().add(new VeinMiner());
+        // Modules.get().add(new ESP());
+
 
         // Commands
         Commands.get().add(new CommandExample());
