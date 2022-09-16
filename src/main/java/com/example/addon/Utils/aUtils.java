@@ -8,6 +8,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.lang.model.util.ElementScanner14;
 import javax.swing.text.html.HTMLDocument.BlockElement;
 import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
 
@@ -23,16 +25,24 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import  meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
+import net.minecraft.util.hit.HitResult;
 public class aUtils {
     static boolean isAccepted;
 
-    public boolean interactBlock(FindItemResult Hoe, Vec3d pos) {
-        return interactBlock(Hoe, pos, true);
+    public boolean interactBlock(FindItemResult Item, Vec3d pos) {
+        return interactBlock(Item, pos, true);
     }
 
-    public static boolean interactBlock(FindItemResult Hoe, Vec3d pos, Boolean swapback) {
+    public static Vec3d getEyesPos(){
+        return new Vec3d(mc.player.getX(), mc.player.getY() + mc.player.getEyeHeight(mc.player.getPose()), mc.player.getZ());
+    }
 
-        if (!Hoe.found()) return false;
+    public static boolean interactBlock(FindItemResult Item, Vec3d pos, Boolean swapback) {
+
+        if (!Item.found()) return false;
+
+
+
 
         // if (!placedWater) isBlock=false;
         // if(PlayerUtils.distanceTo(pos) > mc.interactionManager.getReachDistance()) return false;
@@ -41,12 +51,12 @@ public class aUtils {
         Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, true, () -> {
 
 
-            if (Hoe.isOffhand()) {
+            if (Item.isOffhand()) {
                 mc.interactionManager.interactItem(mc.player, Hand.OFF_HAND);
             }
             else {
                 // int preSlot = mc.player.getInventory().selectedSlot;
-                InvUtils.swap(Hoe.slot(), true);
+                InvUtils.swap(Item.slot(), true);
 
                 isAccepted = (mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(pos, Direction.UP, new BlockPos(pos), false)).isAccepted());
                 if (swapback) InvUtils.swapBack();
@@ -65,26 +75,41 @@ public class aUtils {
             p.getY(),
             p.getZ());
     }
-    public static float clamp(Double val,  int min, int max) {
+    public static Double clamp(double val, double min, double max) {
         return Math.max(min, Math.min(max, val));
     }
 
-    public static Vec3d clamp3d(Vec3d val, BlockPos bPos){
-        return new Vec3d(clamp(mc.player.getX(), bPos.getX(), bPos.getX() + 1), )
+    public static Vec3d clamp3d(Vec3d val, BlockPos bPos, double size){
+        return new Vec3d(
+            clamp(val.getX(), bPos.getX(), bPos.getX() + size),
+            clamp(val.getX(), bPos.getY(), bPos.getY() + size),
+            clamp(val.getX(), bPos.getZ(), bPos.getZ() + size));
+    }
+
+    public static Vec3d closestPointOnBlock(BlockPos bPos){
+        return clamp3d(mc.player.getEyePos(), bPos, 0.999999);
     }
 
 
 
-    public static boolean isReachable(BlockPos blockPos){
-        Vec3d dis = new Vec3d(mc.player.getX() - 0.5, mc.player.getY() + mc.player.getEyeHeight(mc.player.getPose()), mc.player.getZ() - 0.5).subtract(getpos(blockPos));
-        dis = dis.normalize();
+    public static boolean isReachable(Vec3d p){
+        BlockHitResult hit = mc.world.raycast(new RaycastContext(getEyesPos(), p, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player));
 
-        Vec3d closestpos = new Vec3d(clamp(mc.player.getX(), blockPos.getX(), blockPos.getX()))
+        if(hit.getType() != HitResult.Type.MISS){
+            if (p.distanceTo(hit.getPos()) > 1){
 
+                // Logger.Log("" + p.distanceTo(hit.getPos()));
 
+                return false;
+            }
+        }
+        return mc.player.getEyePos().distanceTo(p) < mc.interactionManager.getReachDistance();
 
+    }
 
-        // return Utils.distance(mc.player.getX() - 0.5, mc.player.getY() + mc.player.getEyeHeight(mc.player.getPose()), mc.player.getZ() - 0.5, blockPos.getX() + direction.getOffsetX(), blockPos.getY() + direction.getOffsetY(), blockPos.getZ() + direction.getOffsetZ()) > mc.interactionManager.getReachDistance();
+    public static boolean isReachable(BlockPos bp){
+        return isReachable(closestPointOnBlock(bp));
+        // return mc.player.getEyePos().distanceTo(closestPointOnBlock(bp)) < mc.interactionManager.getReachDistance();
     }
 
     public static List<BlockPos> findblocksnearplayer(List<Block> sblocks, int depth){
@@ -109,13 +134,9 @@ public class aUtils {
                 for (int y = (int) Math.min(mc.world.getTopY(), mc.player.getY() + depth); y > Math.max(mc.world.getBottomY(), mc.player.getY() - depth); y--) {
                     bp.set(x, y, z);
 
-                    // Logger.Log("" + mc.world.getBlockState(bp).getBlock());
                     if(topY && !mc.world.getBlockState(bp.up()).isAir()) continue;
-                    if(PlayerUtils.distanceTo(bp) < )
+                    if(!isReachable(bp)) continue;
                     if (sblocks.contains(mc.world.getBlockState(bp).getBlock())){
-
-                        // block.set(new BlockPos(bp), mc.player.getMovementDirection());
-                        // if(!block.shouldRemove()){
 
                         Blocks.add(new BlockPos(bp));
                         if(slow) return Blocks;

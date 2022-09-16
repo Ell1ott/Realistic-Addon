@@ -31,6 +31,7 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.fluid.Fluids;
@@ -66,6 +67,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.block.LeavesBlock;
 
 import net.minecraft.item.HoeItem;
+
+import com.example.addon.Utils.RendererUtils;
 
 import com.example.addon.Utils.aUtils;
 // import com.example.addon.Utils.BlockUtils;
@@ -120,6 +123,8 @@ public class autoFarm extends Module {
         Logger.Log("hejs");
         placedpos = mc.player.getPos().subtract(0, 0.7, 0);
         Logger.Log("" + aUtils.findblocksnearplayer(Blocks.GRASS_BLOCK, 5, false, true));
+
+        RendererUtils.addBlock(new BlockPos(0, 72, 0), Color.BLUE);
         // Vec3d pos = aUtils.getpos(aUtils.findblocksnearplayer(Blocks.GRASS_BLOCK, 3, true, true).get(0));
         // aUtils.interactBlock(InvUtils.findInHotbar(Items.NETHERITE_HOE), pos, true);
     }
@@ -142,14 +147,17 @@ public class autoFarm extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        List<BlockPos> b = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT), 3, true, true);
+        List<BlockPos> b = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT), 10, true, true);
         if (b.size() != 0){
 
-            Vec3d pos = aUtils.getpos(b.get(0));
-            aUtils.interactBlock(InvUtils.findInHotbar(Items.NETHERITE_HOE), pos, true);
+            Vec3d pos = aUtils.closestPointOnBlock(b.get(0));
+            FindItemResult hoe = InvUtils.findInHotbar(Items.IRON_HOE, Items.STONE_HOE, Items.WOODEN_HOE, Items.GOLDEN_HOE, Items.DIAMOND_HOE, Items.NETHERITE_HOE);
+            aUtils.interactBlock(hoe, pos, true);
+            FindItemResult seeds = InvUtils.findInHotbar(Items.WHEAT_SEEDS);
+            BlockUtils.place(new BlockPos(pos).up(), seeds, true, 0);
         }
         else{
-            Logger.Log("Empty");
+            // Logger.Log("Empty");
         }
 
     }
