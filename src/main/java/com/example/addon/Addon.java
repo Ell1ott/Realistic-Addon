@@ -1,5 +1,6 @@
 package com.example.addon;
 
+import com.example.addon.Utils.RendererUtils;
 import com.example.addon.commands.CommandExample;
 import com.example.addon.hud.HudExample;
 import com.example.addon.modules.ESP;
@@ -32,6 +33,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new NoFall());
         Modules.get().add(new autoFarm());
         Modules.get().add(new VeinMiner());
+        Modules.get().add(new RendererUtils());
         // Modules.get().add(new ESP());
 
 
