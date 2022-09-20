@@ -25,6 +25,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 // import meteordevelopment.meteorclient.systems.modules.combat.Offhand.Item;
 import meteordevelopment.meteorclient.systems.modules.movement.Flight;
+import com.example.addon.Utils.aUtils.MyBlock;
 // import meteordevelopment.meteorclient.systems.modules.player.Reach;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
@@ -71,6 +72,8 @@ import net.minecraft.item.HoeItem;
 import com.example.addon.Utils.RendererUtils;
 
 import com.example.addon.Utils.aUtils;
+
+import java.util.ArrayList;
 // import com.example.addon.Utils.BlockUtils;
 
 public class autoFarm extends Module {
@@ -109,8 +112,13 @@ public class autoFarm extends Module {
     private boolean placedWater = false;
     public Vec3d placedpos;
     private int preBaritoneFallHeight;
+
     public Item[] cluchItems = {Items.LAVA_BUCKET, Items.WATER_BUCKET, Items.POWDER_SNOW_BUCKET, Items.HAY_BLOCK, Items.SLIME_BLOCK};
     public static final Set<Block> cBlocks = Set.of(Blocks.SLIME_BLOCK, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK);
+
+    public static MyBlock BlocksToBreak;
+
+
     // public Block[] cBlocks = {Blocks.SLIME_BLOCK, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK};
     public boolean isBlock;
 
@@ -124,7 +132,7 @@ public class autoFarm extends Module {
         placedpos = mc.player.getPos().subtract(0, 0.7, 0);
         Logger.Log("" + aUtils.findblocksnearplayer(Blocks.GRASS_BLOCK, 5, false, true));
 
-        RendererUtils.addBlock(new BlockPos(0, 72, 0), Color.BLUE);
+        RendererUtils.addBlock(new BlockPos(0, 72, 0), Color.BLUE.a(30));
         // Vec3d pos = aUtils.getpos(aUtils.findblocksnearplayer(Blocks.GRASS_BLOCK, 3, true, true).get(0));
         // aUtils.interactBlock(InvUtils.findInHotbar(Items.NETHERITE_HOE), pos, true);
     }
@@ -147,18 +155,22 @@ public class autoFarm extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        List<BlockPos> b = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT), 10, true, true);
-        if (b.size() != 0){
+
+
+        List<BlockPos> b = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT), 5, true, true, (bp) -> bp.getX() % 4 == 0 && bp.getZ() % 4 == 0);
+        FindItemResult seeds = InvUtils.findInHotbar(Items.WHEAT_SEEDS);
+        if (b.size() != 0 && seeds.found()){
 
             Vec3d pos = aUtils.closestPointOnBlock(b.get(0));
             FindItemResult hoe = InvUtils.findInHotbar(Items.IRON_HOE, Items.STONE_HOE, Items.WOODEN_HOE, Items.GOLDEN_HOE, Items.DIAMOND_HOE, Items.NETHERITE_HOE);
             aUtils.interactBlock(hoe, pos, true);
-            FindItemResult seeds = InvUtils.findInHotbar(Items.WHEAT_SEEDS);
             BlockUtils.place(new BlockPos(pos).up(), seeds, true, 0);
         }
         else{
             // Logger.Log("Empty");
         }
+
+        RendererUtils.addPoint(aUtils.closestPointOnBlock(new BlockPos(0, 100, 0)), Color.BLUE.a(50));
 
     }
 

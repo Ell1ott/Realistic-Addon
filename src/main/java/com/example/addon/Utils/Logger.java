@@ -27,7 +27,7 @@ public class Logger {
     }
 
     @EventHandler
-    private void onTick(TickEvent.Pre event) {
+    private static void onTick(TickEvent.Pre event) {
         Log("heeh");
         if (_TickLog != null) Log(_TickLog);
         _TickLog = null;
