@@ -59,7 +59,7 @@ private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Bu
 private final Setting<Double> pointSize = sgRender.add(new DoubleSetting.Builder()
     .name("point size")
     .description("how much to predict when the player is falling.")
-    .defaultValue(0.3)
+    .defaultValue(0.1)
     .build()
 );
 
@@ -72,7 +72,7 @@ private final Setting<Double> pointSize = sgRender.add(new DoubleSetting.Builder
         public Color color;
         public boolean shouldRemove(){
             time++;
-            return time >= 1;
+            return time >= 10;
         }
     }
 

@@ -14,17 +14,17 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 @Mixin(Rotations.class)
 public abstract class RotationsMixin {
 
-    @Shadow
-    Rotation r;
+    // @Shadow
+    // Rotation r;
+    // // @Overwrite
+    // // public void rotate(double yaw, double pitch, int priority, boolean clientSide, Runnable callback) {
+    // //     Logger.Log("h");
+    // // }
     // @Overwrite
-    // public void rotate(double yaw, double pitch, int priority, boolean clientSide, Runnable callback) {
-    //     Logger.Log("h");
-    // }
-    @Overwrite
-    public static void rotate(double yaw, double pitch, int priority, boolean clientSide, Runnable callback) {
-        Logger.Log("h"+ConfigModifier.get().predict.get());
+    // public static void rotate(double yaw, double pitch, int priority, boolean clientSide, Runnable callback) {
+    //     Logger.Log("h"+ConfigModifier.get().predict.get());
 
-    }
+    // }
 
 
 }

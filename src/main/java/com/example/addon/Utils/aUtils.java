@@ -1,8 +1,12 @@
 package com.example.addon.Utils;
+import net.fabricmc.loader.impl.lib.sat4j.core.Vec;
 import net.fabricmc.loader.impl.lib.sat4j.specs.ContradictionException;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -21,6 +25,8 @@ import javax.annotation.Nullable;
 import javax.lang.model.util.ElementScanner14;
 import javax.swing.text.html.HTMLDocument.BlockElement;
 import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
+
+import org.checkerframework.checker.formatter.qual.ReturnsFormat;
 
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
@@ -103,13 +109,6 @@ public class aUtils {
 
         if (!Item.found()) return false;
 
-
-
-
-        // if (!placedWater) isBlock=false;
-        // if(PlayerUtils.distanceTo(pos) > mc.interactionManager.getReachDistance()) return false;
-
-
         Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, true, () -> {
 
 
@@ -117,15 +116,28 @@ public class aUtils {
                 mc.interactionManager.interactItem(mc.player, Hand.OFF_HAND);
             }
             else {
-                // int preSlot = mc.player.getInventory().selectedSlot;
                 InvUtils.swap(Item.slot(), true);
-
                 isAccepted = (mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(pos, Direction.UP, new BlockPos(pos), false)).isAccepted());
                 if (swapback) InvUtils.swapBack();
             }
 
+        });
+        return isAccepted;
+    }
+    public static boolean useItem(FindItemResult Item, Vec3d pos) {
+        if (!Item.found()) return false;
 
+        Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, true, () -> {
 
+            if (Item.isOffhand()) {
+                mc.interactionManager.interactItem(mc.player, Hand.OFF_HAND);
+            }
+            else {
+                // int preSlot = mc.player.getInventory().selectedSlot;
+                InvUtils.swap(Item.slot(), true);
+                isAccepted = mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND).isAccepted();
+                InvUtils.swapBack();
+            }
         });
 
         return isAccepted;
@@ -170,13 +182,13 @@ public class aUtils {
     }
 
     public static boolean isReachable(BlockPos bp){
-        if (isReachable(closestPointOnBlock(bp))){
-            RendererUtils.addBlock(bp, Color.GREEN.a(50));
-        }
-        else {
-            RendererUtils.addBlock(bp, Color.RED.a(50));
+        // if (isReachable(closestPointOnBlock(bp))){
+        //     RendererUtils.addBlock(bp, Color.GREEN.a(50));
+        // }
+        // else {
+        //     RendererUtils.addBlock(bp, Color.RED.a(50));
 
-        }
+        // }
         return isReachable(closestPointOnBlock(bp));
         // return mc.player.getEyePos().distanceTo(closestPointOnBlock(bp)) < mc.interactionManager.getReachDistance();
     }
@@ -193,6 +205,10 @@ public class aUtils {
     }
     public interface blockFunction {
         boolean run(BlockPos bp);
+    }
+
+    public static List<BlockPos> findblocksnearplayer(List<Block> sblocks, int depth, Boolean topY, Boolean slow){
+        return findblocksnearplayer(sblocks, depth, topY, slow, null);
     }
 
     public static List<BlockPos> findblocksnearplayer(List<Block> sblocks, int depth, Boolean topY, Boolean slow, @Nullable blockFunction bpf){
@@ -220,6 +236,25 @@ public class aUtils {
             }
         }
         return Blocks;
+    }
+
+
+    public static FindItemResult findAndMove(Item item, int moveSlot, Item... items){
+        FindItemResult foundItem = InvUtils.find(item);
+        if(!foundItem.found()) return foundItem;
+        if(foundItem.slot() <= 8 && foundItem.slot() >= 0) return InvUtils.findInHotbar(item);
+        int slot;
+
+        slot = InvUtils.findInHotbar(items).slot();
+        if(slot == -1 && moveSlot == -2) slot = InvUtils.findInHotbar(ItemStack::isEmpty).slot();
+        else if(slot == -1 && moveSlot != -1) slot = moveSlot;
+
+
+
+        if (slot != -1) InvUtils.move().from(foundItem.slot()).toHotbar(slot);
+        return InvUtils.findInHotbar(item);
+
+
     }
 
 

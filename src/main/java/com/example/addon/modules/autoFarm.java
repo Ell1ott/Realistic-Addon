@@ -32,6 +32,7 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
+import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
@@ -55,11 +56,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import org.apache.logging.log4j.core.pattern.AbstractStyleNameConverter.Green;
+
 import net.minecraft.util.math.Direction;
 
 import com.example.addon.Utils.Logger;
 import com.google.errorprone.annotations.Var;
-
+import com.ibm.icu.text.AlphabeticIndex.Bucket;
 
 import net.minecraft.block.Blocks;
 
@@ -116,7 +119,7 @@ public class autoFarm extends Module {
     public Item[] cluchItems = {Items.LAVA_BUCKET, Items.WATER_BUCKET, Items.POWDER_SNOW_BUCKET, Items.HAY_BLOCK, Items.SLIME_BLOCK};
     public static final Set<Block> cBlocks = Set.of(Blocks.SLIME_BLOCK, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK);
 
-    public static MyBlock BlocksToBreak;
+    public static MyBlock BlockToBreak;
 
 
     // public Block[] cBlocks = {Blocks.SLIME_BLOCK, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK};
@@ -155,22 +158,51 @@ public class autoFarm extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
+        List<BlockPos> b2bs = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT),
+                                                    5,
+                                                    true,
+                                                    true,
+                                                    (bp) -> bp.getX() % 9 == 0 && bp.getZ() % 9 == 0 && (mc.world.getBlockState(bp.up().south()).isAir() || mc.world.getBlockState(bp.up().north()).isAir() || mc.world.getBlockState(bp.up().west()).isAir() || mc.world.getBlockState(bp.up().east()).isAir()) );
+
+        if(BlockToBreak == null ) {if(b2bs.size() != 0){
+            BlockPos pos = b2bs.get(0);
 
 
-        List<BlockPos> b = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT), 5, true, true, (bp) -> bp.getX() % 4 == 0 && bp.getZ() % 4 == 0);
-        FindItemResult seeds = InvUtils.findInHotbar(Items.WHEAT_SEEDS);
-        if (b.size() != 0 && seeds.found()){
-
-            Vec3d pos = aUtils.closestPointOnBlock(b.get(0));
-            FindItemResult hoe = InvUtils.findInHotbar(Items.IRON_HOE, Items.STONE_HOE, Items.WOODEN_HOE, Items.GOLDEN_HOE, Items.DIAMOND_HOE, Items.NETHERITE_HOE);
-            aUtils.interactBlock(hoe, pos, true);
-            BlockUtils.place(new BlockPos(pos).up(), seeds, true, 0);
-        }
+            BlockToBreak = new MyBlock();
+            BlockToBreak.set(pos);
+        }}
         else{
-            // Logger.Log("Empty");
+            if(BlockToBreak.shouldRemove()) {
+
+                aUtils.useItem(aUtils.findAndMove(Items.WATER_BUCKET, -2, Items.BUCKET), aUtils.getpos(BlockToBreak.blockPos).add(0.5, 1, 0.5));
+                RendererUtils.addPoint(aUtils.getpos(BlockToBreak.blockPos).add(0.5, 1, 0.5), Color.GREEN.a(155));
+                BlockToBreak = null;
+
+            }
+            else BlockToBreak.mine(true);
+
+
         }
 
-        RendererUtils.addPoint(aUtils.closestPointOnBlock(new BlockPos(0, 100, 0)), Color.BLUE.a(50));
+        if(b2bs.size() == 0){
+
+            List<BlockPos> b = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT), 5, true, true);
+            FindItemResult seeds = aUtils.findAndMove(Items.WHEAT_SEEDS, 8);
+
+            if (b.size() != 0 && seeds.found()){
+
+                Vec3d pos = aUtils.closestPointOnBlock(b.get(0));
+                FindItemResult hoe = InvUtils.findInHotbar(Items.IRON_HOE, Items.STONE_HOE, Items.WOODEN_HOE, Items.GOLDEN_HOE, Items.DIAMOND_HOE, Items.NETHERITE_HOE);
+                aUtils.interactBlock(hoe, pos, true);
+                BlockUtils.place(new BlockPos(pos).up(), seeds, true, 0);
+            }
+            else{
+                // Logger.Log("Empty");
+            }
+
+            RendererUtils.addPoint(aUtils.closestPointOnBlock(new BlockPos(0, 100, 0)), Color.BLUE.a(50));
+        }
+
 
     }
 
