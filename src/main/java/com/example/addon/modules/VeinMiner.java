@@ -7,6 +7,8 @@ package com.example.addon.modules;
 
 import com.google.common.collect.Sets;
 
+import baritone.api.BaritoneAPI;
+import baritone.api.pathing.goals.GoalBlock;
 import meteordevelopment.meteorclient.events.entity.player.StartBreakingBlockEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -23,7 +25,11 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.predicate.entity.EntityTypePredicate;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -36,8 +42,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nullable;
+import meteordevelopment.meteorclient.utils.entity.SortPriority;
+import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 
+import javax.annotation.Nullable;
 import org.apache.commons.logging.LogFactory;
 
 public class VeinMiner extends Module {
@@ -98,6 +106,14 @@ public class VeinMiner extends Module {
         .build()
     );
 
+    private final Setting<Boolean> pickup = sgGeneral.add(new BoolSetting.Builder()
+        .name("pickup")
+        .description("if ")
+        .defaultValue(false)
+        .visible(() -> ModuleMode.get() == ModuleModeList.always)
+        .build()
+
+    );
     private final Setting<Boolean> slow = sgGeneral.add(new BoolSetting.Builder()
         .name("slow")
         .description("if enalbed it will only mine 1 block per tick")
@@ -206,20 +222,22 @@ public class VeinMiner extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
+        if(pickup.get()){
+            Entity Items = TargetUtils.get((Entity entity) -> entity.getType() == EntityType.ITEM, SortPriority.LowestDistance);
+
+            if(Items != null){
+                BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(new BlockPos(Items.getPos().add(0, 0.2, 0))));
+                return;
+            }
+        }
+
         if(ModuleMode.get() == ModuleModeList.always)
         {
             foundBlockPositions.clear();
 
             if (!isMiningBlock()) {
-                // MyBlock block = blockPool.get();
-
-                // blocks.add(block);
-
-                // mineNearbyBlocks(selectedBlocks.get().get(0).asItem(), new BlockPos(mc.player.getPos()), mc.player.getMovementDirection(), depth.get());
 
                 findblocksnearplayer();
-                // mineNearbyBlocks(mc.player.getPos());
-                // mineNearbyBlocks(null, mc.player.getPos(), mc.player.getRotationClient(), depth.get());
 
             }
         }

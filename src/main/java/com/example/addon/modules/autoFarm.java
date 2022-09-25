@@ -193,7 +193,7 @@ public class autoFarm extends Module {
 
                 Vec3d pos = aUtils.closestPointOnBlock(b.get(0));
                 FindItemResult hoe = InvUtils.findInHotbar(Items.IRON_HOE, Items.STONE_HOE, Items.WOODEN_HOE, Items.GOLDEN_HOE, Items.DIAMOND_HOE, Items.NETHERITE_HOE);
-                aUtils.interactBlock(hoe, pos, true);
+                aUtils.interactBlock(hoe, pos, false);
                 BlockUtils.place(new BlockPos(pos).up(), seeds, true, 0);
             }
             else{

@@ -65,7 +65,7 @@ public class aUtils {
 
         public boolean shouldRemove() {
             // Logger.Log("removed block: " + originalBlock + "bc is now " + mc.world.getBlockState(blockPos).getBlock() + " pos --> " + this.blockPos);
-            return mc.world.getBlockState(blockPos).getBlock() != originalBlock;
+            return mc.world.getBlockState(blockPos).getBlock() != originalBlock || !isReachable(blockPos);
         }
 
         public void mine(boolean rotate) {
@@ -114,14 +114,18 @@ public class aUtils {
 
             if (Item.isOffhand()) {
                 mc.interactionManager.interactItem(mc.player, Hand.OFF_HAND);
+
+
             }
             else {
                 InvUtils.swap(Item.slot(), true);
                 isAccepted = (mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(pos, Direction.UP, new BlockPos(pos), false)).isAccepted());
+
                 if (swapback) InvUtils.swapBack();
             }
 
         });
+
         return isAccepted;
     }
     public static boolean useItem(FindItemResult Item, Vec3d pos) {
