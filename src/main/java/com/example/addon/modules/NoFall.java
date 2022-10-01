@@ -33,6 +33,8 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
+import meteordevelopment.meteorclient.utils.render.RenderUtils;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.fluid.Fluids;
@@ -50,6 +52,7 @@ import net.minecraft.item.Item;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import com.example.addon.Utils.RendererUtils;
 import com.google.errorprone.annotations.Var;
 
 import net.minecraft.block.Blocks;
@@ -204,6 +207,7 @@ public class NoFall extends Module {
 
 
                         if (mresult != null && mresult.getType() == HitResult.Type.BLOCK) {
+                            RendererUtils.addPoint(mresult.getPos(), Color.BLUE);
                             if (result == null){
                                 result = mresult;
                             }
@@ -261,7 +265,7 @@ public class NoFall extends Module {
         if (!bucket.found()) return;
 
         if (!placedWater) isBlock=false;
-        if(PlayerUtils.distanceTo(placedpos) > 4) return;
+        if(PlayerUtils.distanceTo(placedpos) > 4) {this.placedWater = placedWater; return;}
 
         Rotations.rotate(Rotations.getYaw(placedpos), Rotations.getPitch(placedpos), 100, true, () -> {
             if(isBlock){
@@ -274,7 +278,8 @@ public class NoFall extends Module {
             else {
                 // int preSlot = mc.player.getInventory().selectedSlot;
                 InvUtils.swap(bucket.slot(), true);
-                if(mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND).isAccepted())Log("" + this.placedWater + placedWater); this.placedWater = placedWater;
+                if(mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND).isAccepted()){Log("" + this.placedWater + placedWater); this.placedWater = placedWater;}
+                else Log("was not accepted");
                 InvUtils.swapBack();
             }
 

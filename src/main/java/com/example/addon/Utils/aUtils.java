@@ -17,6 +17,7 @@ import net.minecraft.world.RaycastContext;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,9 +41,30 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import net.minecraft.util.hit.HitResult;
 public class aUtils {
     static boolean isAccepted;
+    public static boolean isBreaking;
+
+    static int preSlot = 0;
+    static int swapbacktimer;
+    static int swapbackdelay = 10;
+
+
+    public static void setIsBreaking(boolean isB){
+        isBreaking = isB;
+    }
 
     public boolean interactBlock(FindItemResult Item, Vec3d pos) {
         return interactBlock(Item, pos, true);
+    }
+
+    public static void tick(){
+
+
+        if(swapbacktimer < 0) {
+            InvUtils.swapBack();
+            mc.options.attackKey.setPressed(false);
+
+        }
+        if(swapbacktimer > 0) swapbacktimer = swapbacktimer - 1;
     }
 
     public static Vec3d getEyesPos(){
@@ -64,7 +86,7 @@ public class aUtils {
         }
 
         public boolean shouldRemove() {
-            // Logger.Log("removed block: " + originalBlock + "bc is now " + mc.world.getBlockState(blockPos).getBlock() + " pos --> " + this.blockPos);
+
             return mc.world.getBlockState(blockPos).getBlock() != originalBlock || !isReachable(blockPos);
         }
 
@@ -146,6 +168,30 @@ public class aUtils {
 
         return isAccepted;
     }
+    public static void rightClickItem(FindItemResult Item, Vec3d pos) {
+        if (!Item.found()) return;
+
+        Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, true, () -> {
+
+            if (Item.isOffhand()) {
+                if (!mc.player.isUsingItem()) Utils.rightClick();
+            }
+            else {
+                preSlot = mc.player.getInventory().selectedSlot;
+                delaySwap(Item);
+                // if (!mc.player.isUsingItem()) Utils.rightClick();
+                mc.options.useKey.setPressed(true);
+            }
+        });
+
+
+    }
+
+    public static void delaySwap(FindItemResult Item){
+        InvUtils.swap(Item.slot(), true);
+        swapbacktimer = swapbackdelay;
+        // mc.options.attackKey.setPressed(false);
+    }
 
     public static Vec3d getpos(BlockPos p){
         return new Vec3d(
@@ -176,7 +222,7 @@ public class aUtils {
         if(hit.getType() != HitResult.Type.MISS){
             if (p.distanceTo(hit.getPos()) > 0.2){
 
-                // Logger.Log("" + p.distanceTo(hit.getPos()));
+
 
                 return false;
             }

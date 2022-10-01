@@ -79,7 +79,7 @@ import com.example.addon.Utils.aUtils;
 import java.util.ArrayList;
 // import com.example.addon.Utils.BlockUtils;
 
-public class autoFarm extends Module {
+public class autoShield extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Mode> mode = sgGeneral.add(new EnumSetting.Builder<Mode>()
@@ -125,8 +125,8 @@ public class autoFarm extends Module {
     // public Block[] cBlocks = {Blocks.SLIME_BLOCK, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK};
     public boolean isBlock;
 
-    public autoFarm() {
-        super(Categories.Movement, "autoFarm", "auto farms stuff");
+    public autoShield() {
+        super(Categories.Movement, "Auto Shield", "auto");
     }
 
     @Override
@@ -135,55 +135,17 @@ public class autoFarm extends Module {
 
     @Override
     public void onDeactivate() {
+
+    }
+
+
+
+    public Block getBlock(BlockHitResult hit){
+        return mc.world.getBlockState(hit.getBlockPos()).getBlock();
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        List<BlockPos> b2bs = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT),
-                                                    5,
-                                                    true,
-                                                    true,
-                                                    (bp) -> bp.getX() % 9 == 0 && bp.getZ() % 9 == 0 && (mc.world.getBlockState(bp.up().south()).isAir() || mc.world.getBlockState(bp.up().north()).isAir() || mc.world.getBlockState(bp.up().west()).isAir() || mc.world.getBlockState(bp.up().east()).isAir()) );
-
-        if(BlockToBreak == null ) {if(b2bs.size() != 0){
-            BlockPos pos = b2bs.get(0);
-
-
-            BlockToBreak = new MyBlock();
-            BlockToBreak.set(pos);
-        }}
-        else{
-            if(BlockToBreak.shouldRemove()) {
-
-                aUtils.useItem(aUtils.findAndMove(Items.WATER_BUCKET, -2, Items.BUCKET), aUtils.getpos(BlockToBreak.blockPos).add(0.5, 1, 0.5));
-                RendererUtils.addPoint(aUtils.getpos(BlockToBreak.blockPos).add(0.5, 1, 0.5), Color.GREEN.a(155));
-                BlockToBreak = null;
-
-            }
-            else BlockToBreak.mine(true);
-
-
-        }
-
-        if(b2bs.size() == 0){
-
-            List<BlockPos> b = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT), 5, true, true);
-            FindItemResult seeds = aUtils.findAndMove(Items.WHEAT_SEEDS, 8);
-
-            if (b.size() != 0 && seeds.found()){
-
-                Vec3d pos = aUtils.closestPointOnBlock(b.get(0));
-                FindItemResult hoe = InvUtils.findInHotbar(Items.IRON_HOE, Items.STONE_HOE, Items.WOODEN_HOE, Items.GOLDEN_HOE, Items.DIAMOND_HOE, Items.NETHERITE_HOE);
-                aUtils.interactBlock(hoe, pos, false);
-                BlockUtils.place(new BlockPos(pos).up(), seeds, true, 0);
-            }
-            else{
-                // Logger.Log("Empty");
-            }
-
-            RendererUtils.addPoint(aUtils.closestPointOnBlock(new BlockPos(0, 100, 0)), Color.BLUE.a(50));
-        }
-
 
     }
 
@@ -213,6 +175,29 @@ public class autoFarm extends Module {
             r.getBlockPos().getY(),
             r.getBlockPos().getZ());
     }
+    // private void useHoe(FindItemResult Hoe, Vec3d pos, boolean placedWater) {
+    //     if (!Hoe.found()) return;
+
+    //     if (!placedWater) isBlock=false;
+    //     if(PlayerUtils.distanceTo(placedpos) > 4) return;
+
+    //     Rotations.rotate(Rotations.getYaw(placedpos), Rotations.getPitch(placedpos), 100, true, () -> {
+
+
+    //         if (Hoe.isOffhand()) {
+    //             mc.interactionManager.interactItem(mc.player, Hand.OFF_HAND);
+    //         }
+    //         else {
+    //             // int preSlot = mc.player.getInventory().selectedSlot;
+    //             InvUtils.swap(Hoe.slot(), true);
+    //             Logger.Log("Haj");
+
+    //             if(mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, new BlockHitResult(pos, Direction.UP, new BlockPos(pos), false)).isAccepted())Log("" + this.placedWater + placedWater); this.placedWater = placedWater;
+    //             InvUtils.swapBack();
+    //         }
+
+    //     });
+    // }
     private void onDamage(DamageEvent event) {
 
 

@@ -37,6 +37,8 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.shape.VoxelShape;
 
 import com.example.addon.Utils.Logger;
+import com.example.addon.Utils.aUtils;
+import com.example.addon.mixin.breakingblockmixin;
 import com.example.addon.modules.NoFall;
 import java.util.ArrayList;
 import java.util.List;
@@ -106,14 +108,34 @@ public class VeinMiner extends Module {
         .build()
     );
 
-    private final Setting<Boolean> pickup = sgGeneral.add(new BoolSetting.Builder()
-        .name("pickup")
-        .description("if ")
+    private final Setting<Boolean> walktoblock = sgGeneral.add(new BoolSetting.Builder()
+        .name("walk to block")
+        .description("if veinmeiner should walk to the first block in list")
         .defaultValue(false)
         .visible(() -> ModuleMode.get() == ModuleModeList.always)
         .build()
 
     );
+    private final Setting<Boolean> pickup = sgGeneral.add(new BoolSetting.Builder()
+        .name("pickup")
+        .description("if veinmeiner should walk to item to be picked up")
+        .defaultValue(false)
+        .visible(() -> ModuleMode.get() == ModuleModeList.always)
+        .build()
+
+    );
+    private final Setting<Double> pickupdis = sgGeneral.add(new DoubleSetting.Builder()
+        .name("max pickup distance")
+        .description("max distance from player where items should still be picked up")
+        .defaultValue(8)
+        .visible(() -> ModuleMode.get() == ModuleModeList.always)
+        .build()
+
+    );
+
+
+
+
     private final Setting<Boolean> slow = sgGeneral.add(new BoolSetting.Builder()
         .name("slow")
         .description("if enalbed it will only mine 1 block per tick")
@@ -171,6 +193,8 @@ public class VeinMiner extends Module {
     private final List<BlockPos> foundBlockPositions = new ArrayList<>();
     private final BlockPos.Mutable bp = new BlockPos.Mutable();
 
+    boolean isPathing = false;
+
     private int tick = 0;
 
     public VeinMiner() {
@@ -220,15 +244,22 @@ public class VeinMiner extends Module {
         }
     }
 
+
     @EventHandler
     private void onTick(TickEvent.Pre event) {
+        // Logger.Log(breakingblockmixin.isBreaking);
         if(pickup.get()){
-            Entity Items = TargetUtils.get((Entity entity) -> entity.getType() == EntityType.ITEM, SortPriority.LowestDistance);
+            Entity Item = TargetUtils.get((Entity entity) -> entity.getType() == EntityType.ITEM, SortPriority.LowestDistance);
 
-            if(Items != null){
-                BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(new BlockPos(Items.getPos().add(0, 0.2, 0))));
-                return;
+            if(Item != null) if (Item.distanceTo(mc.player) <= pickupdis.get()){
+                BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(new BlockPos(Item.getPos().add(0, 0.2, 0))));
+
+            } else if(BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing()) {
+
+                BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
+
             }
+
         }
 
         if(ModuleMode.get() == ModuleModeList.always)
@@ -249,9 +280,19 @@ public class VeinMiner extends Module {
                 return;
             }
             tick = 0;
+            if(!aUtils.isBreaking){
 
-            blocks.get(0).mine();
+                blocks.get(0).mine();
+                aUtils.setIsBreaking(false);
+            }
+
+            else{
+                Logger.Log("dghds");
+            }
+
         }
+
+
     }
 
     @EventHandler

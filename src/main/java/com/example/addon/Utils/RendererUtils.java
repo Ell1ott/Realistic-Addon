@@ -150,6 +150,8 @@ private final Setting<Double> pointSize = sgRender.add(new DoubleSetting.Builder
     private static void onTick(TickEvent.Pre event) {
         blockobjs.removeIf(BlockObj::shouldRemove);
         pointobjs.removeIf(pointObj::shouldRemove);
+
+        aUtils.tick();
     }
 
 
