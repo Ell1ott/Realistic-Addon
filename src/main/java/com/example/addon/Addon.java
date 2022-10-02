@@ -4,6 +4,7 @@ import com.example.addon.Utils.RendererUtils;
 import com.example.addon.commands.CommandExample;
 import com.example.addon.hud.HudExample;
 import com.example.addon.modules.ArrowBlock;
+import com.example.addon.modules.AutoEXP;
 import com.example.addon.modules.ESP;
 import com.example.addon.modules.KillAuraCrit;
 import com.example.addon.modules.ModuleExample;
@@ -41,6 +42,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new ArrowBlock());
         Modules.get().add(new KillAuraCrit());
         Modules.get().add(new Trajectories());
+        Modules.get().add(new AutoEXP());
         // Modules.get().add(new ESP());
 
 
