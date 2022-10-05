@@ -199,8 +199,8 @@ public class Trajectories extends Module {
             hitQuad = false;
             entity = null;
         }
-
-        public void calculate() {
+        public void calculate() {calculate(false);}
+        public void calculate(boolean LivingEntity) {
             addPoint();
 
             for (int i = 0; i < (simulationSteps.get() > 0 ? simulationSteps.get() : Integer.MAX_VALUE); i++) {
