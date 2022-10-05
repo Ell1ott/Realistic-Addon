@@ -152,6 +152,7 @@ private final Setting<Double> pointSize = sgRender.add(new DoubleSetting.Builder
         pointobjs.removeIf(pointObj::shouldRemove);
 
         aUtils.tick();
+        Logger.tick();
     }
 
 

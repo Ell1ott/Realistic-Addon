@@ -182,6 +182,9 @@ public class ProjectileEntitySimulator {
         // Apply velocity
         ((IVec3d) prevPos3d).set(pos);
         pos.add(velocity);
+        Vec3 walkVel = new Vec3();
+        walkVel.set(velocity);
+        walkVel.y = 0;
 
         // Update velocity
         velocity.multiply(isTouchingWater() ? waterDrag : airDrag);
@@ -198,8 +201,11 @@ public class ProjectileEntitySimulator {
         // Check for collision
         ((IVec3d) pos3d).set(pos);
         HitResult hitResult = getCollision();
-
-        return hitResult.getType() == HitResult.Type.MISS ? null : hitResult;
+        if(hitResult.getType() != HitResult.Type.MISS ){
+            velocity.set(walkVel);
+            if(velocity.x != 0 || velocity.z != 0) return null;
+        }
+        return (hitResult.getType() == HitResult.Type.MISS) ? null : hitResult;
     }
 
     private boolean isTouchingWater() {
