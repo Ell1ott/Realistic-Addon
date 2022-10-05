@@ -37,6 +37,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.SwordItem;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 
 import java.util.ArrayList;
@@ -375,6 +376,13 @@ public class KillAuraCrit extends Module {
             if (randomDelayEnabled.get()) hitDelayTimer += Math.round(Math.random() * randomDelayMax.get());
             return true;
         }
+    }
+
+    public void distanceFromPlayer(){
+
+
+
+
     }
 
     private void attack(Entity target) {
