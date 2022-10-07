@@ -8,6 +8,7 @@ import com.example.addon.modules.AutoEXP;
 import com.example.addon.modules.ESP;
 import com.example.addon.modules.KillAuraCrit;
 import com.example.addon.modules.ModuleExample;
+import com.example.addon.modules.ChatyBot;
 import com.example.addon.modules.NoFall;
 import com.example.addon.modules.Trajectories;
 import com.example.addon.modules.VeinMiner;
@@ -34,6 +35,7 @@ public class Addon extends MeteorAddon {
         LOG.info("Initializing Meteor Addon Template");
 
         // Modules
+        Modules.get().add(new ChatyBot());
         Modules.get().add(new ModuleExample());
         Modules.get().add(new NoFall());
         Modules.get().add(new autoFarm());
