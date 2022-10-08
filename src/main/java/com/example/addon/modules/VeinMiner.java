@@ -83,6 +83,8 @@ public class VeinMiner extends Module {
     );
 
 
+
+
     private final Setting<ListMode> listmode = sgGeneral.add(new EnumSetting.Builder<ListMode>()
         .name("Selection mode")
         .description("Selection mode.")
@@ -206,6 +208,7 @@ public class VeinMiner extends Module {
         for (MyBlock block : blocks) blockPool.free(block);
         blocks.clear();
         foundBlockPositions.clear();
+        Logger.Log(""+Blocks.STONE);
     }
 
     private boolean isMiningBlock(BlockPos pos) {

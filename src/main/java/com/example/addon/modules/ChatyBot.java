@@ -1,5 +1,6 @@
 package com.example.addon.modules;
 
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -7,16 +8,16 @@ import com.example.addon.Addon;
 import com.example.addon.Utils.Logger;
 
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
+import meteordevelopment.meteorclient.events.game.SendMessageEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
+import net.minecraft.util.registry.DefaultedRegistry;
+import net.minecraft.util.registry.Registry;
 
 import meteordevelopment.orbit.EventHandler;
 
@@ -31,19 +32,30 @@ public class ChatyBot extends Module {
         .build()
     );
 
+    private final Setting<Boolean> blockchattting = sgGeneral.add(new BoolSetting.Builder()
+        .name("block-chattting")
+        .description("Centers the player and reduces movement when using bucket or air place mode.")
+        .defaultValue(false)
+        .build()
+    );
+
 
     public ChatyBot() {
         super(Addon.CATEGORY, "Chat-Bot", "answers math questions");
+
     }
 
     int timer = 0;
-    Pattern pattern = Pattern.compile("hvad er ([0-9]+ ?[+\\-/*]+ ?[0-9]+)", Pattern.CASE_INSENSITIVE);
+    Pattern MathPattern = Pattern.compile("hvad er ([0-9]+ ?[+\\-/*]+ ?[0-9]+)", Pattern.CASE_INSENSITIVE);
+    Pattern WordPattern = Pattern.compile("gæt ordet: \"(.+)\"", Pattern.CASE_INSENSITIVE);
 
-   String answer = null;
+
+    String answer = null;
 
     @Override
     public void onActivate() {
         timer = 0;
+
 
 
 
@@ -56,7 +68,7 @@ public class ChatyBot extends Module {
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         timer = timer + 1;
-        // Logger.Log(""+timer);
+
         if(timer > delay.get() && answer != null){
             mc.player.sendChatMessage(answer, null);
             answer = null;
@@ -69,17 +81,59 @@ public class ChatyBot extends Module {
         timer = 0;
         String msg = event.getMessage().getString();
 
-        Matcher Matcher = pattern.matcher(msg);
+        Matcher Matcher = MathPattern.matcher(msg);
         if(Matcher.find()){
 
             answer = String.format("%.0f", eval(Matcher.group(1)));
         }
-
+        Matcher = WordPattern.matcher(msg);
+        if(Matcher.find()){
+            answer = findword(Matcher.group(1)).toLowerCase();
+        }
 
 
 
         // info(msg);
     }
+    public static String findword(String Iword){
+        Iword = Iword.toLowerCase();
+        String CWord = "";
+        int len = Iword.length();
+
+        for (int i = 0; i < Registry.ITEM.size() - 1; i++) {
+            CWord = Registry.ITEM.get(i).getName().getString().toLowerCase();
+            if(CWord.length() != len) continue;
+
+            for (char c : Iword.toCharArray()) {
+                if (CWord == "") {CWord = "null"; break;}
+                if(CWord.indexOf(c) != -1)  {CWord = CWord.replaceFirst(""+c, "");}
+                else break;
+            }
+            if(CWord == "") return Registry.ITEM.get(i).getName().getString();
+        }
+
+        for (int i = 0; i < Registry.ENTITY_TYPE.size() - 1; i++) {
+            CWord = Registry.ENTITY_TYPE.get(i).getName().getString().toLowerCase();
+            if(CWord.length() != len) continue;
+
+            for (char c : Iword.toCharArray()) {
+                if (CWord == "") {CWord = "null"; break;}
+                if(CWord.indexOf(c) != -1)  {CWord = CWord.replaceFirst(""+c, "");}
+                else break;
+            }
+            if(CWord == "") return Registry.ENTITY_TYPE.get(i).getName().getString();
+        }
+
+        return null;
+    }
+    @EventHandler
+    private void onMessageSend(SendMessageEvent event) {
+        if(blockchattting.get()) event.cancel();
+    }
+
+
+
+
 
     public static double eval(final String str) {
         return new Object() {
