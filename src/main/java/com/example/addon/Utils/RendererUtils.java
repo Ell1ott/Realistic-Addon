@@ -5,9 +5,14 @@ package com.example.addon.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.lang.model.util.Elements.Origin;
+
+import org.checkerframework.checker.units.qual.radians;
+
 import javassist.expr.NewArray;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.renderer.Renderer3D;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -17,8 +22,10 @@ import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import oshi.driver.windows.perfmon.PhysicalDisk;
@@ -27,7 +34,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.settings.ColorSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+// import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class RendererUtils extends Module{
     public static List<BlockObj> blockobjs = new ArrayList<>();
@@ -138,18 +145,88 @@ private final Setting<Double> pointSize = sgRender.add(new DoubleSetting.Builder
         pointobjs.add(new RendererUtils().new pointObj(pos, color));
     }
 
+    public static void renderLine(Vec3d v1, Vec3d v2, Render3DEvent event){
+        event.renderer.line(
+            v1.x, v1.y, v1.z,
+            v2.x, v2.y, v2.z,
+            Color.BLACK
+            );
+    }
+
     @EventHandler
-    private static void onRender(Render3DEvent event) {
+    private void onRender(Render3DEvent event) {
         // blockobjs = new ArrayList<>();
         for (BlockObj block : blockobjs) block.render(event);
         for (pointObj point : pointobjs) point.render(event);
 
+        renderLine(getPos(mc.player, event), getPos(mc.player, event).add(5, 0, 0), event);
+
+        // Logger.TickLog(""+Math.sin(1));
+
+
+        Vec3d lastpoint = Vec3d.ZERO;
+        Vec3d point = Vec3d.ZERO;
+        Vec3d Origin = Vec3d.ZERO.add(getPos(mc.player, event)).add(0, event.tickDelta, 0);
+        final int NUM_POINTS = 100;
+        final double RADIUS = 1d;
+
+        Color bottomColor = new Color(Color.CYAN);
+        Color topColor = new Color(Color.CYAN);
+        topColor.a(0);
+        bottomColor.a(100);
+
+
+        for (int i = 0; i < NUM_POINTS; ++i)
+        {
+
+            final Vec3d p1 = getCirclePoint(Math.toRadians(((double) i / NUM_POINTS) * 360d), RADIUS).add(Origin); //.add(getPos(mc.player, event)).add(0, mc.player.getHealth()/mc.player.getMaxHealth(), 0);
+            final Vec3d p2 = getCirclePoint(Math.toRadians(((double) (i+1) / NUM_POINTS) * 360d), RADIUS).add(Origin); //).add(getPos(mc.player, event)).add(0, mc.player.getHealth()/mc.player.getMaxHealth(), 0);
+
+            // renderLine(p1.add(getPos(mc.player, event)), p2.add(getPos(mc.player, event)), event);
+            renderquad(event.renderer, getPos(mc.player, event), getPos(mc.player, event).add(1, 0, 0), getPos(mc.player, event).add(1, 0, 2), getPos(mc.player, event).add(0, 0, 2), topColor, topColor, bottomColor, bottomColor);
+
+            // event.renderer.gradientQuadVertical(
+            //     p1.x, p1.y, p1.z,
+            //     p2.x, p2.y + 0.7, p2.z,
+            //     topColor, bottomColor
+            //     );
+
+        }
+
+
+
+    }
+
+    public void renderquad(Renderer3D renderer, Vec3d p1, Vec3d p2, Vec3d p3, Vec3d p4, Color topLeft, Color topRight, Color bottomRight, Color bottomLeft){
+        renderer.quad(
+            p1.x, p1.y, p1.z,
+            p2.x, p2.y, p2.z,
+            p3.x, p3.y, p3.z,
+            p4.x, p4.y, p4.z,
+            topLeft, topRight, bottomRight, bottomLeft);
+    }
+
+
+    public Vec3d getCirclePoint(double angle, double RADIUS){
+        return new Vec3d(
+            Math.cos(angle) * RADIUS,
+            0,
+            Math.sin(angle) * RADIUS);
+    }
+    public Vec3d getPos(Entity entity, Render3DEvent event){
+        return new Vec3d(
+        MathHelper.lerp(event.tickDelta, entity.lastRenderX, entity.getX()),
+        MathHelper.lerp(event.tickDelta, entity.lastRenderY, entity.getY()),
+        MathHelper.lerp(event.tickDelta, entity.lastRenderZ, entity.getZ()));
+
     }
 
     @EventHandler
-    private static void onTick(TickEvent.Pre event) {
+    private  void onTick(TickEvent.Pre event) {
         blockobjs.removeIf(BlockObj::shouldRemove);
         pointobjs.removeIf(pointObj::shouldRemove);
+
+
 
         aUtils.tick();
         Logger.tick();
