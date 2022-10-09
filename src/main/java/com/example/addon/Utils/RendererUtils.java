@@ -15,6 +15,7 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.Renderer3D;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.EnumSetting;
+import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.utils.misc.Pool;
@@ -63,12 +64,47 @@ private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Bu
     .build()
 );
 
+
+
+private final Setting<SettingColor> c1 = sgRender.add(new ColorSetting.Builder()
+    .name("color-1")
+    .description("The color of the lines of the blocks being rendered.")
+    .defaultValue(new SettingColor(255, 255, 255, 255))
+    .build()
+);
+private final Setting<SettingColor> c2 = sgRender.add(new ColorSetting.Builder()
+    .name("color-2")
+    .description("The color of the lines of the blocks being rendered.")
+    .defaultValue(new SettingColor(255, 255, 255, 255))
+    .build()
+);
+private final Setting<SettingColor> c3 = sgRender.add(new ColorSetting.Builder()
+    .name("color-3")
+    .description("The color of the lines of the blocks being rendered.")
+    .defaultValue(new SettingColor(255, 255, 255, 255))
+    .build()
+);
+private final Setting<SettingColor> c4 = sgRender.add(new ColorSetting.Builder()
+    .name("color-4")
+    .description("The color of the lines of the blocks being rendered.")
+    .defaultValue(new SettingColor(255, 255, 255, 255))
+    .build()
+);
+
 private final Setting<Double> pointSize = sgRender.add(new DoubleSetting.Builder()
     .name("point size")
     .description("how much to predict when the player is falling.")
     .defaultValue(0.1)
     .build()
 );
+
+private final Setting<Integer> delay = sgRender.add(new IntSetting.Builder()
+        .name("delay")
+        .defaultValue(60)
+        .range(1, 200)
+        .sliderRange(1, 200)
+        .build()
+    );
 
     public RendererUtils() {
         super(Categories.Render, "RenderUtils", "utils for simple rendering");
@@ -145,45 +181,77 @@ private final Setting<Double> pointSize = sgRender.add(new DoubleSetting.Builder
         pointobjs.add(new RendererUtils().new pointObj(pos, color));
     }
 
-    public static void renderLine(Vec3d v1, Vec3d v2, Render3DEvent event){
-        event.renderer.line(
+    public static void renderLine(Renderer3D renderer, Vec3d v1, Vec3d v2, Color c){
+        renderer.line(
             v1.x, v1.y, v1.z,
             v2.x, v2.y, v2.z,
-            Color.BLACK
+            c
             );
     }
 
     @EventHandler
     private void onRender(Render3DEvent event) {
         // blockobjs = new ArrayList<>();
+
+        Renderer3D renderer = event.renderer;
         for (BlockObj block : blockobjs) block.render(event);
         for (pointObj point : pointobjs) point.render(event);
 
-        renderLine(getPos(mc.player, event), getPos(mc.player, event).add(5, 0, 0), event);
+        // renderLine(getPos(mc.player, event), getPos(mc.player, event).add(5, 0, 0), event);
 
         // Logger.TickLog(""+Math.sin(1));
 
 
-        Vec3d lastpoint = Vec3d.ZERO;
-        Vec3d point = Vec3d.ZERO;
-        Vec3d Origin = Vec3d.ZERO.add(getPos(mc.player, event)).add(0, event.tickDelta, 0);
-        final int NUM_POINTS = 100;
-        final double RADIUS = 1d;
+
+        Vec3d Origin = Vec3d.ZERO.add(getPos(mc.player, event));//.add(0, mc.player.getHealth() / mc.player.getMaxHealth(), 0);
+        // final int NUM_POINTS = 100;
+        // final double RADIUS = 1d;
 
         Color bottomColor = new Color(Color.CYAN);
         Color topColor = new Color(Color.CYAN);
         topColor.a(0);
         bottomColor.a(100);
 
+        renderCircel(renderer, 1d, 100, Origin, c1.get());
+
+
+        // renderquad(
+        //     event.renderer,
+        //     getPos(mc.player, event), getPos(mc.player, event).add(1, 0, 0), getPos(mc.player, event).add(1, 0, 2), getPos(mc.player, event).add(0, 0, 2),
+        //     c1.get(), c2.get(), c3.get(), c4.get());
+
+        // renderGradientCylinder(event.renderer, 1d, 100, Origin, 0.2f, topColor, bottomColor);
+        // renderGradientCirkel(event.renderer, 3d, 2.5d, 100, Origin, c1.get(), c2.get(), 0.1);
+        // renderGradientCirkel(null, 0, 0, Origin);
+
+    }
+    public static void renderGradientCirkel(Renderer3D renderer, double r1, double r2, int NUM_POINTS, Vec3d Origin, Color innerColor, Color outerColor){
+        renderGradientCirkel(renderer, r1, r2, NUM_POINTS, Origin, innerColor, outerColor, 1);
+    }
+
+    public static void renderGradientCirkel(Renderer3D renderer, double r1, double r2, int NUM_POINTS, Vec3d Origin, Color innerColor, Color outerColor, double t){
+        renderGradientCirkel(renderer, r1, r2, NUM_POINTS, Origin, innerColor, outerColor, t, false);
+    }
+    public static void renderGradientCirkel(Renderer3D renderer, double r1, double r2, int NUM_POINTS, Vec3d Origin, Color innerColor, Color outerColor, double t, boolean rainbow){
+
 
         for (int i = 0; i < NUM_POINTS; ++i)
         {
+            final double a1 = ((double) i / NUM_POINTS) * 360d;
+            final double a2 = ((double) (i+1) / NUM_POINTS) * 360d;
+            final Vec3d p1 = getCirclePoint(Math.toRadians(a1), r1).add(Origin); //.add(getPos(mc.player, event)).add(0, mc.player.getHealth()/mc.player.getMaxHealth(), 0);
+            final Vec3d p2 = getCirclePoint(Math.toRadians(a2), r1).add(Origin);
+            final Vec3d p3 = getCirclePoint(Math.toRadians(a1), r2).add(Origin);
+            final Vec3d p4 = getCirclePoint(Math.toRadians(a2), r2).add(Origin);
 
-            final Vec3d p1 = getCirclePoint(Math.toRadians(((double) i / NUM_POINTS) * 360d), RADIUS).add(Origin); //.add(getPos(mc.player, event)).add(0, mc.player.getHealth()/mc.player.getMaxHealth(), 0);
-            final Vec3d p2 = getCirclePoint(Math.toRadians(((double) (i+1) / NUM_POINTS) * 360d), RADIUS).add(Origin); //).add(getPos(mc.player, event)).add(0, mc.player.getHealth()/mc.player.getMaxHealth(), 0);
-
+            renderquad(
+                renderer,
+                p1, p2, p4, p3,
+                t(outerColor, t),
+                t(rainbow ? hsvToRgb(a1, 100, 100) : innerColor, t),
+                t(rainbow ? hsvToRgb(((double) (i-1) / NUM_POINTS) * 360d, 100, 100) : innerColor, t),
+                t(outerColor, t));
             // renderLine(p1.add(getPos(mc.player, event)), p2.add(getPos(mc.player, event)), event);
-            renderquad(event.renderer, getPos(mc.player, event), getPos(mc.player, event).add(1, 0, 0), getPos(mc.player, event).add(1, 0, 2), getPos(mc.player, event).add(0, 0, 2), topColor, topColor, bottomColor, bottomColor);
 
             // event.renderer.gradientQuadVertical(
             //     p1.x, p1.y, p1.z,
@@ -192,12 +260,112 @@ private final Setting<Double> pointSize = sgRender.add(new DoubleSetting.Builder
             //     );
 
         }
-
-
-
     }
 
-    public void renderquad(Renderer3D renderer, Vec3d p1, Vec3d p2, Vec3d p3, Vec3d p4, Color topLeft, Color topRight, Color bottomRight, Color bottomLeft){
+    public static Color t(Color c, double t){
+        Color cc = new Color(c);
+        cc.a((int) (c.a * t));
+        return cc;
+    }
+
+    public static void renderGradientCylinder(Renderer3D renderer, double RADIUS, int NUM_POINTS, Vec3d Origin, Float height, Color topColor, Color bottomColor){
+        for (int i = 0; i < NUM_POINTS; ++i)
+        {
+
+            final Vec3d p1 = getCirclePoint(Math.toRadians(((double) i / NUM_POINTS) * 360d), RADIUS).add(Origin); //.add(getPos(mc.player, event)).add(0, mc.player.getHealth()/mc.player.getMaxHealth(), 0);
+            final Vec3d p2 = getCirclePoint(Math.toRadians(((double) (i+1) / NUM_POINTS) * 360d), RADIUS).add(Origin);
+
+
+
+            // renderLine(p1.add(getPos(mc.player, event)), p2.add(getPos(mc.player, event)), event);
+
+            renderer.gradientQuadVertical(
+                p1.x, p1.y, p1.z,
+                p2.x, p2.y + height, p2.z,
+                topColor, bottomColor
+                );
+        }
+    }
+
+    public static void renderCircel(Renderer3D renderer, double RADIUS, int NUM_POINTS, Vec3d Origin, Color color){
+        for (int i = 0; i < NUM_POINTS; ++i)
+        {
+
+            final Vec3d p1 = getCirclePoint(Math.toRadians(((double) i / NUM_POINTS) * 360d), RADIUS).add(Origin); //.add(getPos(mc.player, event)).add(0, mc.player.getHealth()/mc.player.getMaxHealth(), 0);
+            final Vec3d p2 = getCirclePoint(Math.toRadians(((double) (i+1) / NUM_POINTS) * 360d), RADIUS).add(Origin);
+
+
+
+            // renderLine(p1.add(getPos(mc.player, event)), p2.add(getPos(mc.player, event)), event);
+
+            renderLine(renderer, p1, p2, color);
+        }
+    }
+
+    public static Color hsvToRgb(double H, float S, float V) {
+
+        float R, G, B;
+
+        H /= 360f;
+        S /= 100f;
+        V /= 100f;
+
+        if (S == 0)
+        {
+            R = V * 255;
+            G = V * 255;
+            B = V * 255;
+        } else {
+            float var_h = (float) (H * 6);
+            if (var_h == 6)
+                var_h = 0; // H must be < 1
+            int var_i = (int) Math.floor((double) var_h); // Or ... var_i =
+                                                            // floor( var_h )
+            float var_1 = V * (1 - S);
+            float var_2 = V * (1 - S * (var_h - var_i));
+            float var_3 = V * (1 - S * (1 - (var_h - var_i)));
+
+            float var_r;
+            float var_g;
+            float var_b;
+            if (var_i == 0) {
+                var_r = V;
+                var_g = var_3;
+                var_b = var_1;
+            } else if (var_i == 1) {
+                var_r = var_2;
+                var_g = V;
+                var_b = var_1;
+            } else if (var_i == 2) {
+                var_r = var_1;
+                var_g = V;
+                var_b = var_3;
+            } else if (var_i == 3) {
+                var_r = var_1;
+                var_g = var_2;
+                var_b = V;
+            } else if (var_i == 4) {
+                var_r = var_3;
+                var_g = var_1;
+                var_b = V;
+            } else {
+                var_r = V;
+                var_g = var_1;
+                var_b = var_2;
+            }
+
+            R = var_r * 255; // RGB results from 0 to 255
+            G = var_g * 255;
+            B = var_b * 255;
+
+        }
+        return new Color((int)R, (int)G, (int)B);
+    }
+
+    public void renderquad(Renderer3D renderer, Vec3d p1, Vec3d p2, Vec3d p3, Vec3d p4, Color color){
+        renderquad(renderer, p1, p2, p3, p4, color);
+    }
+    public static void renderquad(Renderer3D renderer, Vec3d p1, Vec3d p2, Vec3d p3, Vec3d p4, Color topLeft, Color topRight, Color bottomRight, Color bottomLeft){
         renderer.quad(
             p1.x, p1.y, p1.z,
             p2.x, p2.y, p2.z,
@@ -207,13 +375,13 @@ private final Setting<Double> pointSize = sgRender.add(new DoubleSetting.Builder
     }
 
 
-    public Vec3d getCirclePoint(double angle, double RADIUS){
+    public static Vec3d getCirclePoint(double angle, double RADIUS){
         return new Vec3d(
             Math.cos(angle) * RADIUS,
             0,
             Math.sin(angle) * RADIUS);
     }
-    public Vec3d getPos(Entity entity, Render3DEvent event){
+    public static Vec3d getPos(Entity entity, Render3DEvent event){
         return new Vec3d(
         MathHelper.lerp(event.tickDelta, entity.lastRenderX, entity.getX()),
         MathHelper.lerp(event.tickDelta, entity.lastRenderY, entity.getY()),
