@@ -1,10 +1,12 @@
 package com.example.addon.modules;
 
 import com.example.addon.Addon;
+import com.example.addon.Utils.Logger;
 
 import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalBlock;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
@@ -15,10 +17,13 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.render.FreeLook;
 import meteordevelopment.meteorclient.utils.entity.SortPriority;
 import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -127,6 +132,22 @@ public class hunt extends Module {
     .build()
     );
 
+    float prevYaw;
+    float prevPitch;
+
+    boolean isWalking;
+    boolean hasToggledFreeLook = false;
+
+    FreeLook.Mode prevMode;
+
+    FreeLook freeLook;
+
+    public enum Mode {
+        Player,
+        Camera
+    }
+
+
 
     public hunt() {
         super(Addon.CATEGORY, "hunt", "hunts specified entities");
@@ -136,24 +157,72 @@ public class hunt extends Module {
 
     @Override
     public void onActivate() {
+        freeLook.toggle();
+        FreeLook freeLook = Modules.get().get(FreeLook.class);
+        if(!freeLook.isActive()){
+            hasToggledFreeLook = true;
+            prevMode = freeLook.mode.get();
 
+            freeLook.toggle();
+            freeLook.mode.set(FreeLook.Mode.Camera);
+
+
+        }
+    }
+
+    @Override
+    public void onDeactivate() {
+        // if(prevMode != null) freeLook.mode.set(prevMode);
+        // if(hasToggledFreeLook) freeLook.toggle();
+        // Logger.Log(""+hasToggledFreeLook);
+        // freeLook.toggle();
+        // hasToggledFreeLook = false;
     }
     @EventHandler
     private void onTick(TickEvent.Pre event) {
+
+
+        prevYaw = mc.player.getYaw();
+        prevPitch = mc.player.getPitch();
         Entity entity = TargetUtils.get(this::entityCheck, SortPriority.LowestDistance);
 
 
 
         if(entity != null) if (entity.distanceTo(mc.player) <= dis.get()){
-            BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(new BlockPos(entity.getPos().add(0, 0.2, 0))));
+            // BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalBlock(new BlockPos(entity.getPos().add(0, 0.2, 0))));
+            mc.player.setPitch((float) Rotations.getPitch(entity));
+            mc.player.setYaw((float) Rotations.getYaw(entity));
 
-        } else if(BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing()) {
+            // Rotations.rotate(Rotations.getYaw(entity), Rotations.getPitch(entity));
 
-            BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
+            isWalking = true;
 
+            // mc.player.setSprinting(true);
+        }
+        else if(isWalking) {
+
+            // BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
         }
 
 
+    }
+
+    @EventHandler
+    private void onTick(TickEvent.Post event) {
+        // mc.player.setYaw(prevYaw);
+        // mc.player.setPitch(prevPitch);
+
+
+    }
+
+
+    @EventHandler
+    private void onRender(Render3DEvent event) {
+        // prevYaw = mc.player.getYaw(event.tickDelta);
+        // prevPitch = mc.player.getPitch(event.tickDelta);
+        // mc.player.setYaw(prevYaw);
+        // mc.player.setPitch(prevPitch);
+        // mc.player.travel(new Vec3d(1, 0, 0));
     }
 
     private boolean entityCheck(Entity entity) {

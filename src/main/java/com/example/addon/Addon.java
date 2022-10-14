@@ -8,7 +8,7 @@ import com.example.addon.modules.AutoEXP;
 import com.example.addon.modules.ESP;
 import com.example.addon.modules.JumpEffect;
 import com.example.addon.modules.KillAuraCrit;
-import com.example.addon.modules.ModuleExample;
+import com.example.addon.modules.dupe;
 import com.example.addon.modules.ChatyBot;
 import com.example.addon.modules.NoFall;
 import com.example.addon.modules.Trajectories;
@@ -16,6 +16,7 @@ import com.example.addon.modules.VeinMiner;
 import com.example.addon.modules.autoFarm;
 import com.example.addon.modules.autoShield;
 import com.example.addon.modules.hunt;
+import com.example.addon.modules.autoMove;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.commands.Commands;
@@ -38,7 +39,7 @@ public class Addon extends MeteorAddon {
 
         // Modules
         Modules.get().add(new ChatyBot());
-        Modules.get().add(new ModuleExample());
+        Modules.get().add(new dupe());
         Modules.get().add(new NoFall());
         Modules.get().add(new autoFarm());
         Modules.get().add(new VeinMiner());
@@ -49,6 +50,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoEXP());
         Modules.get().add(new JumpEffect());
         Modules.get().add(new hunt());
+        Modules.get().add(new autoMove());
 
         // Modules.get().add(new ESP());
 

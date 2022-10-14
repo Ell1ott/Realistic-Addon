@@ -90,7 +90,7 @@ private final Setting<SettingColor> c2 = sgGeneral.add(new ColorSetting.Builder(
 
     public class circleEffect {
         public int tick = 0;
-        public float size = 0.2f;
+        public float size = 0.01f;
         Vec3d pos = mc.player.getPos();
         public void get(){
             MeteorClient.EVENT_BUS.subscribe(this);

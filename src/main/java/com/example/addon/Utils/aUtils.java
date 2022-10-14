@@ -46,6 +46,7 @@ public class aUtils {
     static int preSlot = 0;
     static int swapbacktimer;
     static int swapbackdelay = 10;
+    static int clicktimer;
 
 
     public static void setIsBreaking(boolean isB){
@@ -57,6 +58,8 @@ public class aUtils {
     }
 
     public static void tick(){
+        if(clicktimer > -1) clicktimer--;
+        if(clicktimer == 0) mc.options.useKey.setPressed(false);
 
 
         if(swapbacktimer < 0) {
@@ -168,24 +171,34 @@ public class aUtils {
 
         return isAccepted;
     }
-    public static void rightClickItem(FindItemResult Item, Vec3d pos) {
+    public static void rightClickItem(FindItemResult Item, Vec3d pos, int realeseDelay) {
         if (!Item.found()) return;
 
         Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, true, () -> {
 
             if (Item.isOffhand()) {
-                if (!mc.player.isUsingItem()) Utils.rightClick();
+                if (!mc.player.isUsingItem()) {
+                    mc.options.useKey.setPressed(true);
+                    clicktimer = realeseDelay;
+                }
             }
             else {
                 preSlot = mc.player.getInventory().selectedSlot;
                 delaySwap(Item);
                 // if (!mc.player.isUsingItem()) Utils.rightClick();
                 mc.options.useKey.setPressed(true);
+                clicktimer = realeseDelay;
             }
         });
 
 
     }
+
+    
+
+    // public static FindItemResult findItemHotbarOffhand(Item item){
+    //     return if()
+    // }
 
     public static void delaySwap(FindItemResult Item){
         InvUtils.swap(Item.slot(), true);

@@ -11,6 +11,8 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.ProjectileEntitySimulator;
+import meteordevelopment.meteorclient.utils.entity.SortPriority;
+import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 import meteordevelopment.meteorclient.utils.misc.Pool;
 import meteordevelopment.meteorclient.utils.misc.Vec3;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
@@ -18,8 +20,11 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.mob.SkeletonEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
+import net.minecraft.item.BowItem;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.math.BlockPos;
@@ -30,6 +35,7 @@ import java.util.*;
 import com.example.addon.Utils.Logger;
 import com.example.addon.Utils.RendererUtils;
 import com.example.addon.Utils.aUtils;
+import com.example.addon.Utils.RotationUtils;
 
 public class ArrowBlock extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -73,6 +79,17 @@ public class ArrowBlock extends Module {
         .sliderMax(5000)
         .build()
     );
+    public final Setting<Integer> releasedelay = sgGeneral.add(new IntSetting.Builder()
+        .name("release-delay")
+        .description("how many ticks it should take to realease the right click button again")
+        .defaultValue(25)
+        .range(0, 60)
+        .sliderMax(50)
+        .build()
+    );
+
+
+
 
     private final ProjectileEntitySimulator simulator = new ProjectileEntitySimulator();
     private final Pool<Vec3> vec3s = new Pool<>(Vec3::new);
@@ -88,6 +105,13 @@ public class ArrowBlock extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
+
+        // if(skeleton != null && skeleton.getHandItems().iterator().next().getItem() instanceof BowItem BowItem){
+
+
+        // }
+
+
         for (Vec3 point : points) vec3s.free(point);
         points.clear();
 
@@ -105,17 +129,30 @@ public class ArrowBlock extends Module {
             }
         }
 
-        if (isValid(Vec3d.ZERO, false)) return; // no need to move
+        if (isValid(Vec3d.ZERO, false)) {
+            LivingEntity skeleton = (LivingEntity) TargetUtils.get((Entity e) -> e instanceof SkeletonEntity && e instanceof LivingEntity s && s.getItemUseTime() > 10 && s.distanceTo(mc.player) < 30, SortPriority.LowestDistance);
+            if(skeleton == null) return;
+            // Logger.Log(""+RotationUtils.calcDis(skeleton, mc.player));
+            FindItemResult shield = InvUtils.findInHotbar(Items.SHIELD);
+            useShild(skeleton.getPos());
 
-        Logger.Log("ahhh");
+            RendererUtils.addPoint(skeleton.getPos(), Color.BLUE);
+            return;
+
+        } // no need to move
+
+
 
         RendererUtils.addPoint(toVec3d(points.get(1)), Color.BLUE);
-        FindItemResult shield = InvUtils.findInHotbar(Items.SHIELD);
-        aUtils.rightClickItem(shield, toVec3d(points.get(1)));
+        useShild(toVec3d(points.get(0)));
+
 
 
     }
-
+    public void useShild(Vec3d pos){
+        FindItemResult shield = InvUtils.findInHotbar(Items.SHIELD);
+        aUtils.rightClickItem(shield, pos, releasedelay.get());
+    }
 
     private boolean isValid(Vec3d velocity, boolean checkGround) {
         Vec3d playerPos = mc.player.getPos().add(velocity);

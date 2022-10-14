@@ -12,6 +12,9 @@ public class Logger {
     public static void Log(String Log){
         mc.player.sendChatMessage(String.valueOf(Log), null);
     }
+    public static void Log(int Log){
+        mc.player.sendChatMessage(String.valueOf(Log), null);
+    }
     public static ActionResult Log(ActionResult Log){
         mc.player.sendChatMessage(String.valueOf(Log), null);
         return Log;
@@ -21,6 +24,8 @@ public class Logger {
         return Log;
 
     }
+
+
 
     public static void TickLog(String log){
         _TickLog = log;
