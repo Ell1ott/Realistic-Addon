@@ -212,7 +212,18 @@ private final Setting<Integer> delay = sgRender.add(new IntSetting.Builder()
         topColor.a(0);
         bottomColor.a(100);
 
-        renderCircel(renderer, 1d, 100, Origin, c1.get());
+        // renderCircel(renderer, 1d, 100, Origin, c1.get());
+
+        // renderLine(renderer, getPos(mc.player, event).add(0, 0, 10), getPos(mc.player, event).add(0, 0, 11), color.BLACK);
+        // float t;
+        // float v;
+        // for (int i = 0; i < 100; i++) {
+        //     t = i/100;
+        //     v = t;
+
+        //     renderLine(renderer, getPos(mc.player, event).add(t*10, v, -10), getPos(mc.player, event).add((t+0.01)*10, v, -10), color.BLACK);
+
+        // }
 
 
         // renderquad(
