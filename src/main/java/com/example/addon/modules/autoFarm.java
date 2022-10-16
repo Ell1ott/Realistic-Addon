@@ -18,6 +18,7 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.EnumSetting;
+import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Categories;
@@ -89,14 +90,6 @@ public class autoFarm extends Module {
         .build()
     );
 
-    private final Setting<PlaceMode> airPlaceMode = sgGeneral.add(new EnumSetting.Builder<PlaceMode>()
-        .name("place-mode")
-        .description("Whether place mode places before you die or before you take damage.")
-        .defaultValue(PlaceMode.BeforeDeath)
-        .visible(() -> mode.get() == Mode.AirPlace)
-        .build()
-    );
-
     private final Setting<Boolean> anchor = sgGeneral.add(new BoolSetting.Builder()
         .name("anchor")
         .description("Centers the player and reduces movement when using bucket or air place mode.")
@@ -104,17 +97,23 @@ public class autoFarm extends Module {
         .visible(() -> mode.get() != Mode.Packet)
         .build()
     );
-    private final Setting<Double> predict = sgGeneral.add(new DoubleSetting.Builder()
-        .name("predict")
-        .description("how much to predict when the player is falling.")
-        .defaultValue(1)
-        .visible(() -> mode.get() == Mode.MLG)
-        .build()
+
+
+    private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
+       .name("delay-after-water-place")
+       .description("the delay in ticks to wait before placing water")
+       .defaultValue(2)
+       .range(0, 40)
+       .sliderRange(0, 40)
+       .build()
     );
+
+
 
     private boolean placedWater = false;
     public Vec3d placedpos;
     private int preBaritoneFallHeight;
+    int timer = 0;
 
     public Item[] cluchItems = {Items.LAVA_BUCKET, Items.WATER_BUCKET, Items.POWDER_SNOW_BUCKET, Items.HAY_BLOCK, Items.SLIME_BLOCK};
     public static final Set<Block> cBlocks = Set.of(Blocks.SLIME_BLOCK, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK);
@@ -131,14 +130,21 @@ public class autoFarm extends Module {
 
     @Override
     public void onActivate() {
+        timer = 0;
     }
 
     @Override
     public void onDeactivate() {
     }
 
+
+
     @EventHandler
     private void onTick(TickEvent.Pre event) {
+        timer--;
+        if(timer > 0){
+            return;
+        }
         List<BlockPos> b2bs = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT),
                                                     5,
                                                     true,
@@ -153,14 +159,21 @@ public class autoFarm extends Module {
             BlockToBreak.set(pos);
         }}
         else{
-            if(BlockToBreak.shouldRemove()) {
 
-                aUtils.useItem(aUtils.findAndMove(Items.WATER_BUCKET, -2, Items.BUCKET), aUtils.getpos(BlockToBreak.blockPos).add(0.5, 1, 0.5));
-                RendererUtils.addPoint(aUtils.getpos(BlockToBreak.blockPos).add(0.5, 1, 0.5), Color.GREEN.a(155));
-                BlockToBreak = null;
+            if(BlockToBreak.shouldRemove()) {
+                if(timer == 0){
+                    aUtils.useItem(aUtils.findAndMove(Items.WATER_BUCKET, -2, Items.BUCKET), aUtils.getpos(BlockToBreak.blockPos).add(0.5, 1, 0.5));
+                    RendererUtils.addPoint(aUtils.getpos(BlockToBreak.blockPos).add(0.5, 1, 0.5), Color.GREEN.a(155));
+                    BlockToBreak = null;
+                }
+                else timer = delay.get();
 
             }
-            else BlockToBreak.mine(true);
+            else {
+
+
+                BlockToBreak.mine(true);}
+
 
 
         }
@@ -232,20 +245,6 @@ public class autoFarm extends Module {
         MLG
     }
 
-    public enum PlaceMode {
-        BeforeDamage(height -> height > 2),
-        BeforeDeath(height -> height > Math.max(PlayerUtils.getTotalHealth(), 2));
-
-        private final Predicate<Float> fallHeight;
-
-        PlaceMode(Predicate<Float> fallHeight) {
-            this.fallHeight = fallHeight;
-        }
-
-        public boolean test(float fallheight) {
-            return fallHeight.test(fallheight);
-        }
-    }
 
     public void Log(String Log){
         mc.player.sendChatMessage(String.valueOf(Log), null);

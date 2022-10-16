@@ -50,6 +50,8 @@ import meteordevelopment.meteorclient.utils.entity.TargetUtils;
 import javax.annotation.Nullable;
 import org.apache.commons.logging.LogFactory;
 
+import com.example.addon.Utils.aUtils.MyBlock;
+
 public class VeinMiner extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
@@ -199,6 +201,10 @@ public class VeinMiner extends Module {
 
     private int tick = 0;
 
+    MyBlock block2break;
+
+
+
     public VeinMiner() {
         super(Categories.World, "vein-miner", "Mines all nearby blocks with this type");
     }
@@ -241,7 +247,7 @@ public class VeinMiner extends Module {
 
         if (!isMiningBlock(event.blockPos)) {
             MyBlock block = blockPool.get();
-            block.set(event);
+            block.set(event.blockPos);
             blocks.add(block);
             mineNearbyBlocks(block.originalBlock.asItem(),event.blockPos,event.direction,depth.get());
         }
@@ -272,6 +278,10 @@ public class VeinMiner extends Module {
             if (!isMiningBlock()) {
 
                 findblocksnearplayer();
+                block2break = new MyBlock(aUtils.findblocksnearplayer(selectedBlocks.get(), 5).get(0));
+
+
+
 
             }
         }
@@ -285,7 +295,7 @@ public class VeinMiner extends Module {
             tick = 0;
             if(!aUtils.isBreaking){
 
-                blocks.get(0).mine();
+                blocks.get(0).mine(rotate.get());
                 aUtils.setIsBreaking(false);
             }
 
@@ -301,102 +311,102 @@ public class VeinMiner extends Module {
     @EventHandler
     private void onRender(Render3DEvent event) {
         if (render.get()) {
-            for (MyBlock block : blocks) block.render(event);
+            for (MyBlock block : blocks) block.render(event, sideColor.get(), lineColor.get(), shapeMode.get());
         }
     }
 
-    private class MyBlock {
-        public BlockPos blockPos;
-        public Direction direction;
-        public Block originalBlock;
-        public boolean mining;
+    // private class MyBlock {
+    //     public BlockPos blockPos;
+    //     public Direction direction;
+    //     public Block originalBlock;
+    //     public boolean mining;
 
-        public void set(StartBreakingBlockEvent event) {
-            this.blockPos = event.blockPos;
-            this.direction = event.direction;
-            this.originalBlock = mc.world.getBlockState(blockPos).getBlock();
-            this.mining = false;
-        }
+    //     public void set(StartBreakingBlockEvent event) {
+    //         this.blockPos = event.blockPos;
+    //         this.direction = event.direction;
+    //         this.originalBlock = mc.world.getBlockState(blockPos).getBlock();
+    //         this.mining = false;
+    //     }
 
-        public void set(BlockPos pos, Direction dir) {
-            this.blockPos = pos;
-            this.direction = dir;
-            this.originalBlock = mc.world.getBlockState(pos).getBlock();
-            this.mining = false;
-        }
+    //     public void set(BlockPos pos, Direction dir) {
+    //         this.blockPos = pos;
+    //         this.direction = dir;
+    //         this.originalBlock = mc.world.getBlockState(pos).getBlock();
+    //         this.mining = false;
+    //     }
 
-        public boolean shouldRemove() {
-            // Logger.Log("removed block: " + originalBlock + "bc is now " + mc.world.getBlockState(blockPos).getBlock() + " pos --> " + this.blockPos);
-            return mc.world.getBlockState(blockPos).getBlock() != originalBlock || Utils.distance(mc.player.getX() - 0.5, mc.player.getY() + mc.player.getEyeHeight(mc.player.getPose()), mc.player.getZ() - 0.5, blockPos.getX() + direction.getOffsetX(), blockPos.getY() + direction.getOffsetY(), blockPos.getZ() + direction.getOffsetZ()) > mc.interactionManager.getReachDistance();
-        }
+    //     public boolean shouldRemove() {
+    //         // Logger.Log("removed block: " + originalBlock + "bc is now " + mc.world.getBlockState(blockPos).getBlock() + " pos --> " + this.blockPos);
+    //         return mc.world.getBlockState(blockPos).getBlock() != originalBlock || Utils.distance(mc.player.getX() - 0.5, mc.player.getY() + mc.player.getEyeHeight(mc.player.getPose()), mc.player.getZ() - 0.5, blockPos.getX() + direction.getOffsetX(), blockPos.getY() + direction.getOffsetY(), blockPos.getZ() + direction.getOffsetZ()) > mc.interactionManager.getReachDistance();
+    //     }
 
-        public void mine() {
-            if (!mining) {
-                mc.player.swingHand(Hand.MAIN_HAND);
-                mining = true;
-            }
-            if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 50, this::updateBlockBreakingProgress);
-            else updateBlockBreakingProgress();
-        }
+    //     public void mine() {
+    //         if (!mining) {
+    //             mc.player.swingHand(Hand.MAIN_HAND);
+    //             mining = true;
+    //         }
+    //         if (rotate.get()) Rotations.rotate(Rotations.getYaw(blockPos), Rotations.getPitch(blockPos), 50, this::updateBlockBreakingProgress);
+    //         else updateBlockBreakingProgress();
+    //     }
 
-        private void updateBlockBreakingProgress() {
-            BlockUtils.breakBlock(blockPos, swingHand.get());
-        }
+    //     private void updateBlockBreakingProgress() {
+    //         BlockUtils.breakBlock(blockPos, swingHand.get());
+    //     }
 
-        public void render(Render3DEvent event) {
-            VoxelShape shape = mc.world.getBlockState(blockPos).getOutlineShape(mc.world, blockPos);
+    //     public void render(Render3DEvent event) {
+    //         VoxelShape shape = mc.world.getBlockState(blockPos).getOutlineShape(mc.world, blockPos);
 
-            double x1 = blockPos.getX();
-            double y1 = blockPos.getY();
-            double z1 = blockPos.getZ();
-            double x2 = blockPos.getX() + 1;
-            double y2 = blockPos.getY() + 1;
-            double z2 = blockPos.getZ() + 1;
+    //         double x1 = blockPos.getX();
+    //         double y1 = blockPos.getY();
+    //         double z1 = blockPos.getZ();
+    //         double x2 = blockPos.getX() + 1;
+    //         double y2 = blockPos.getY() + 1;
+    //         double z2 = blockPos.getZ() + 1;
 
-            if (!shape.isEmpty()) {
-                x1 = blockPos.getX() + shape.getMin(Direction.Axis.X);
-                y1 = blockPos.getY() + shape.getMin(Direction.Axis.Y);
-                z1 = blockPos.getZ() + shape.getMin(Direction.Axis.Z);
-                x2 = blockPos.getX() + shape.getMax(Direction.Axis.X);
-                y2 = blockPos.getY() + shape.getMax(Direction.Axis.Y);
-                z2 = blockPos.getZ() + shape.getMax(Direction.Axis.Z);
-            }
+    //         if (!shape.isEmpty()) {
+    //             x1 = blockPos.getX() + shape.getMin(Direction.Axis.X);
+    //             y1 = blockPos.getY() + shape.getMin(Direction.Axis.Y);
+    //             z1 = blockPos.getZ() + shape.getMin(Direction.Axis.Z);
+    //             x2 = blockPos.getX() + shape.getMax(Direction.Axis.X);
+    //             y2 = blockPos.getY() + shape.getMax(Direction.Axis.Y);
+    //             z2 = blockPos.getZ() + shape.getMax(Direction.Axis.Z);
+    //         }
 
-            event.renderer.box(x1, y1, z1, x2, y2, z2, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-
-
-        }
-    }
-
-    public void findblocksnearplayer(){
+    //         event.renderer.box(x1, y1, z1, x2, y2, z2, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
 
 
-        for (int x = (int) (mc.player.getX() - depth.get()); x < mc.player.getX() + depth.get(); x++) {
-            for (int z = (int) (mc.player.getZ() - depth.get()); z < mc.player.getZ() + depth.get(); z++) {
-                for (int y = (int) Math.max(mc.world.getBottomY(), mc.player.getY() - depth.get()); y < Math.min(mc.world.getTopY(), mc.player.getY() + depth.get()); y++) {
-                    bp.set(x, y, z);
+    //     }
+    // }
 
-                    if (selectedBlocks.get().contains(mc.world.getBlockState(bp).getBlock())) {
+    // public void findblocksnearplayer(){
 
 
-                        MyBlock block = blockPool.get();
+    //     for (int x = (int) (mc.player.getX() - depth.get()); x < mc.player.getX() + depth.get(); x++) {
+    //         for (int z = (int) (mc.player.getZ() - depth.get()); z < mc.player.getZ() + depth.get(); z++) {
+    //             for (int y = (int) Math.max(mc.world.getBottomY(), mc.player.getY() - depth.get()); y < Math.min(mc.world.getTopY(), mc.player.getY() + depth.get()); y++) {
+    //                 bp.set(x, y, z);
 
-                        block.set(new BlockPos(bp), mc.player.getMovementDirection());
-                        if(!block.shouldRemove()){
-
-                            blocks.add(block);
-                            if(slow.get()) return;
-                        }
-
-                    }
-                }
-            }
-        }
+    //                 if (selectedBlocks.get().contains(mc.world.getBlockState(bp).getBlock())) {
 
 
+    //                     MyBlock block = blockPool.get();
+
+    //                     block.set(new BlockPos(bp));
+    //                     if(!block.shouldRemove()){
+
+    //                         blocks.add(block);
+    //                         if(slow.get()) return;
+    //                     }
+
+    //                 }
+    //             }
+    //         }
+    //     }
 
 
-    }
+
+
+
     private void mineNearbyBlocks(@Nullable Item item, BlockPos pos, Direction dir, int depth) {
         if (depth<=0) return;
         if (foundBlockPositions.contains(pos)) return;
@@ -408,7 +418,7 @@ public class VeinMiner extends Module {
                 case vein:
                     if (mc.world.getBlockState(neighbour).getBlock().asItem() == item) {
                         MyBlock block = blockPool.get();
-                        block.set(neighbour,dir);
+                        block.set(neighbour);
                         blocks.add(block);
                         mineNearbyBlocks(item, neighbour, dir, depth-1);
                     }
@@ -416,7 +426,7 @@ public class VeinMiner extends Module {
                     for (Block _block : selectedBlocks.get()) {
                         if (mc.world.getBlockState(neighbour).getBlock().asItem() == _block.asItem()) {
                             MyBlock block = blockPool.get();
-                            block.set(neighbour,dir);
+                            block.set(neighbour);
                             blocks.add(block);
                             mineNearbyBlocks(item, neighbour, dir, depth-1);
 

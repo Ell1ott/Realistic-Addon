@@ -13,6 +13,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.RaycastContext;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -29,6 +30,8 @@ import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
 
 import org.checkerframework.checker.formatter.qual.ReturnsFormat;
 
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import  meteordevelopment.meteorclient.utils.player.PlayerUtils;
@@ -81,6 +84,13 @@ public class aUtils {
         public boolean mining;
         public boolean swingHand;
 
+        public void MyBlock(BlockPos pos){
+            this.blockPos = pos;
+
+            this.originalBlock = mc.world.getBlockState(pos).getBlock();
+            this.mining = false;
+        }
+
         public void set(BlockPos pos) {
             this.blockPos = pos;
 
@@ -106,29 +116,31 @@ public class aUtils {
             BlockUtils.breakBlock(blockPos, swingHand);
         }
 
-        // public void render(Render3DEvent event) {
-        //     VoxelShape shape = mc.world.getBlockState(blockPos).getOutlineShape(mc.world, blockPos);
 
-        //     double x1 = blockPos.getX();
-        //     double y1 = blockPos.getY();
-        //     double z1 = blockPos.getZ();
-        //     double x2 = blockPos.getX() + 1;
-        //     double y2 = blockPos.getY() + 1;
-        //     double z2 = blockPos.getZ() + 1;
+        public void render(Render3DEvent event, Color sideColor, Color lineColor, ShapeMode shapeMode) {
+            VoxelShape shape = mc.world.getBlockState(blockPos).getOutlineShape(mc.world, blockPos);
 
-        //     if (!shape.isEmpty()) {
-        //         x1 = blockPos.getX() + shape.getMin(Direction.Axis.X);
-        //         y1 = blockPos.getY() + shape.getMin(Direction.Axis.Y);
-        //         z1 = blockPos.getZ() + shape.getMin(Direction.Axis.Z);
-        //         x2 = blockPos.getX() + shape.getMax(Direction.Axis.X);
-        //         y2 = blockPos.getY() + shape.getMax(Direction.Axis.Y);
-        //         z2 = blockPos.getZ() + shape.getMax(Direction.Axis.Z);
-        //     }
+            double x1 = blockPos.getX();
+            double y1 = blockPos.getY();
+            double z1 = blockPos.getZ();
+            double x2 = blockPos.getX() + 1;
+            double y2 = blockPos.getY() + 1;
+            double z2 = blockPos.getZ() + 1;
 
-        //     event.renderer.box(x1, y1, z1, x2, y2, z2, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
+            if (!shape.isEmpty()) {
+                x1 = blockPos.getX() + shape.getMin(Direction.Axis.X);
+                y1 = blockPos.getY() + shape.getMin(Direction.Axis.Y);
+                z1 = blockPos.getZ() + shape.getMin(Direction.Axis.Z);
+                x2 = blockPos.getX() + shape.getMax(Direction.Axis.X);
+                y2 = blockPos.getY() + shape.getMax(Direction.Axis.Y);
+                z2 = blockPos.getZ() + shape.getMax(Direction.Axis.Z);
+            }
+
+            event.renderer.box(x1, y1, z1, x2, y2, z2, sideColor, lineColor, shapeMode, 0);
 
 
         }
+    }
 
     public static boolean interactBlock(FindItemResult Item, Vec3d pos, Boolean swapback) {
 
@@ -194,7 +206,7 @@ public class aUtils {
 
     }
 
-    
+
 
     // public static FindItemResult findItemHotbarOffhand(Item item){
     //     return if()
@@ -276,6 +288,8 @@ public class aUtils {
 
     public static List<BlockPos> findblocksnearplayer(List<Block> sblocks, int depth, Boolean topY, Boolean slow, @Nullable blockFunction bpf){
         BlockPos.Mutable bp = new BlockPos.Mutable();
+
+
 
         List<BlockPos> Blocks = new ArrayList<>();
 
