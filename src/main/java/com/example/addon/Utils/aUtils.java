@@ -168,10 +168,12 @@ public class aUtils {
     public static boolean useItem(FindItemResult Item, Vec3d pos) {
         if (!Item.found()) return false;
 
+        if(isReachable(pos)) return false;
+
         Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), 100, true, () -> {
 
             if (Item.isOffhand()) {
-                mc.interactionManager.interactItem(mc.player, Hand.OFF_HAND);
+                isAccepted = mc.interactionManager.interactItem(mc.player, Hand.OFF_HAND).isAccepted();
             }
             else {
                 // int preSlot = mc.player.getInventory().selectedSlot;
@@ -247,7 +249,7 @@ public class aUtils {
         if(hit.getType() != HitResult.Type.MISS){
             if (p.distanceTo(hit.getPos()) > 0.2){
 
-
+                RendererUtils.addPoint(hit.getPos(), Color.CYAN);
 
                 return false;
             }

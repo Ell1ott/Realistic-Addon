@@ -162,7 +162,7 @@ public class autoFarm extends Module {
 
             if(BlockToBreak.shouldRemove()) {
                 if(timer == 0){
-                    aUtils.useItem(aUtils.findAndMove(Items.WATER_BUCKET, -2, Items.BUCKET), aUtils.getpos(BlockToBreak.blockPos).add(0.5, 1, 0.5));
+                    Logger.Log(aUtils.useItem(aUtils.findAndMove(Items.WATER_BUCKET, -2, Items.BUCKET), aUtils.getpos(BlockToBreak.blockPos).add(0.5, 1, 0.5)));
                     RendererUtils.addPoint(aUtils.getpos(BlockToBreak.blockPos).add(0.5, 1, 0.5), Color.GREEN.a(155));
                     BlockToBreak = null;
                 }

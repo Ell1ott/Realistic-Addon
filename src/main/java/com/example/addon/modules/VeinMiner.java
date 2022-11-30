@@ -277,8 +277,14 @@ public class VeinMiner extends Module {
 
             if (!isMiningBlock()) {
 
-                findblocksnearplayer();
-                block2break = new MyBlock(aUtils.findblocksnearplayer(selectedBlocks.get(), 5).get(0));
+                // findblocksnearplayer();
+                // for (BlockPos bP : iterable) {
+                //     aUtils.findblocksnearplayer(selectedBlocks.get(), 5).get(0)
+
+                // }
+                MyBlock mblock = new MyBlock();
+                mblock.set(aUtils.findblocksnearplayer(selectedBlocks.get(), 5).get(0));
+                blocks.add(mblock);
 
 
 
