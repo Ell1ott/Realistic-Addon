@@ -157,17 +157,17 @@ public class hunt extends Module {
 
     @Override
     public void onActivate() {
-        freeLook.toggle();
-        FreeLook freeLook = Modules.get().get(FreeLook.class);
-        if(!freeLook.isActive()){
-            hasToggledFreeLook = true;
-            prevMode = freeLook.mode.get();
+        // freeLook = Modules.get().get(FreeLook.class);
+        // freeLook.toggle();
+        // if(!freeLook.isActive()){
+        //     hasToggledFreeLook = true;
+        //     prevMode = freeLook.mode.get();
 
-            freeLook.toggle();
-            freeLook.mode.set(FreeLook.Mode.Camera);
+        //     freeLook.toggle();
+        //     freeLook.mode.set(FreeLook.Mode.Camera);
 
 
-        }
+        // }
     }
 
     @Override
