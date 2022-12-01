@@ -7,7 +7,9 @@ package com.example.addon.modules;
 
 import baritone.api.BaritoneAPI;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
@@ -42,6 +44,8 @@ import net.minecraft.world.GameMode;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.example.addon.Utils.RendererUtils;
 
 public class KillAuraCrit extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -420,6 +424,43 @@ public class KillAuraCrit extends Module {
     public String getInfoString() {
         if (!targets.isEmpty()) EntityUtils.getName(getTarget());
         return null;
+    }
+    public class circleRenderer {
+        public int tick = 0;
+        public float size = 0.01f;
+        Vec3d pos = mc.player.getPos();
+        Entity e;
+
+        public void set(Entity e) {
+            MeteorClient.EVENT_BUS.subscribe(this);
+
+            this.e = e;
+        }
+
+
+
+        @EventHandler
+        private void onTick(TickEvent.Pre event) {
+            tick++;
+
+        }
+
+        // @EventHandler
+        // private void onRender(Render3DEvent event) {
+        //     size += speed.get() * event.frameTime;
+
+        //     RendererUtils.renderGradientCirkel(
+        //             event.renderer,
+        //             size, size * (1 - thicness.get()),
+        //             100,
+        //             pos,
+        //             c1.get(), c2.get(),
+        //             (maxsize.get() - size) / maxsize.get());
+
+        //     if (size > maxsize.get())
+        //         MeteorClient.EVENT_BUS.unsubscribe(this);
+
+        // }
     }
 
     public enum Weapon {
