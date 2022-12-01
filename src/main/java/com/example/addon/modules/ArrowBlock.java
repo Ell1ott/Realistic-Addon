@@ -131,6 +131,8 @@ public class ArrowBlock extends Module {
 
         if (isValid(Vec3d.ZERO, false)) {
             LivingEntity skeleton = (LivingEntity) TargetUtils.get((Entity e) -> e instanceof SkeletonEntity && e instanceof LivingEntity s && s.getItemUseTime() > 10 && s.distanceTo(mc.player) < 30, SortPriority.LowestDistance);
+
+
             if(skeleton == null) return;
             // Logger.Log(""+RotationUtils.calcDis(skeleton, mc.player));
             FindItemResult shield = InvUtils.findInHotbar(Items.SHIELD);
