@@ -21,6 +21,7 @@ import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.entity.mob.SkeletonEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
@@ -130,15 +131,19 @@ public class ArrowBlock extends Module {
         }
 
         if (isValid(Vec3d.ZERO, false)) {
-            LivingEntity skeleton = (LivingEntity) TargetUtils.get((Entity e) -> e instanceof SkeletonEntity && e instanceof LivingEntity s && s.getItemUseTime() > 10 && s.distanceTo(mc.player) < 30, SortPriority.LowestDistance);
+            LivingEntity entity = (LivingEntity) TargetUtils.get((Entity e) -> e instanceof SkeletonEntity && e instanceof LivingEntity s && s.getItemUseTime() > 10 && s.distanceTo(mc.player) < 30, SortPriority.LowestDistance);
+            if(entity == null){
+
+                entity = (LivingEntity) TargetUtils.get((Entity e) -> e instanceof CreeperEntity c && c.getClientFuseTime(0) > 0.7 && e.distanceTo(mc.player) < 30, SortPriority.LowestDistance);
+            }
 
 
-            if(skeleton == null) return;
+            if(entity == null) return;
             // Logger.Log(""+RotationUtils.calcDis(skeleton, mc.player));
             FindItemResult shield = InvUtils.findInHotbar(Items.SHIELD);
-            useShild(skeleton.getPos());
+            useShild(entity.getPos());
 
-            RendererUtils.addPoint(skeleton.getPos(), Color.BLUE);
+            RendererUtils.addPoint(entity.getPos(), Color.BLUE);
             return;
 
         } // no need to move

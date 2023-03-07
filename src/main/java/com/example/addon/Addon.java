@@ -46,7 +46,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new RendererUtils());
         Modules.get().add(new ArrowBlock());
         Modules.get().add(new KillAuraCrit());
-        Modules.get().add(new Trajectories());
+        // Modules.get().add(new Trajectories());
         Modules.get().add(new AutoEXP());
         Modules.get().add(new JumpEffect());
         Modules.get().add(new hunt());

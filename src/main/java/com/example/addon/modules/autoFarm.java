@@ -65,8 +65,9 @@ import com.example.addon.Utils.Logger;
 import com.google.errorprone.annotations.Var;
 import com.ibm.icu.text.AlphabeticIndex.Bucket;
 
+import javassist.expr.Instanceof;
 import net.minecraft.block.Blocks;
-
+import net.minecraft.block.CropBlock;
 import net.minecraft.entity.Entity;
 
 import net.minecraft.block.LeavesBlock;
@@ -83,6 +84,7 @@ import java.util.ArrayList;
 public class autoFarm extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+
     private final Setting<Mode> mode = sgGeneral.add(new EnumSetting.Builder<Mode>()
         .name("mode")
         .description("The way you are saved from fall damage.")
@@ -90,11 +92,16 @@ public class autoFarm extends Module {
         .build()
     );
 
-    private final Setting<Boolean> anchor = sgGeneral.add(new BoolSetting.Builder()
-        .name("anchor")
-        .description("Centers the player and reduces movement when using bucket or air place mode.")
-        .defaultValue(false)
-        .visible(() -> mode.get() != Mode.Packet)
+    private final Setting<Boolean> ceatefarm = sgGeneral.add(new BoolSetting.Builder()
+        .name("create farm land")
+        .description("")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> freplace = sgGeneral.add(new BoolSetting.Builder()
+        .name("fast replace")
+        .description("")
+        .defaultValue(true)
         .build()
     );
 
@@ -180,18 +187,43 @@ public class autoFarm extends Module {
 
         if(b2bs.size() == 0){
 
-            List<BlockPos> b = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT), 5, true, true);
             FindItemResult seeds = aUtils.findAndMove(Items.WHEAT_SEEDS, 8);
 
-            if (b.size() != 0 && seeds.found()){
+            if(ceatefarm.get()){
+                List<BlockPos> btohoe = aUtils.findblocksnearplayer(Arrays.asList(Blocks.GRASS_BLOCK, Blocks.DIRT), 5, true, true);
+                if (btohoe.size() != 0){
 
-                Vec3d pos = aUtils.closestPointOnBlock(b.get(0));
-                FindItemResult hoe = InvUtils.findInHotbar(Items.IRON_HOE, Items.STONE_HOE, Items.WOODEN_HOE, Items.GOLDEN_HOE, Items.DIAMOND_HOE, Items.NETHERITE_HOE);
-                aUtils.interactBlock(hoe, pos, false);
-                BlockUtils.place(new BlockPos(pos).up(), seeds, true, 0);
+                    Vec3d pos = aUtils.closestPointOnBlock(btohoe.get(0));
+                    FindItemResult hoe = InvUtils.findInHotbar(Items.IRON_HOE, Items.STONE_HOE, Items.WOODEN_HOE, Items.GOLDEN_HOE, Items.DIAMOND_HOE, Items.NETHERITE_HOE);
+                    aUtils.interactBlock(hoe, pos, false);
+                    BlockUtils.place(new BlockPos(pos).up(), seeds, true, 0);
+                }
             }
-            else{
-                // Logger.Log("Empty");
+
+            else {
+                List<BlockPos> btoplant = aUtils.findblocksnearplayer(Arrays.asList(Blocks.FARMLAND), 5, true, true);
+
+                if (btoplant.size() != 0 && seeds.found()){
+
+                    Vec3d pos = aUtils.closestPointOnBlock(btoplant.get(0));
+                    BlockUtils.place(new BlockPos(pos).up(), seeds, true, 0);
+                }
+                else {
+                    List<BlockPos> btodestroy = aUtils.findblocksnearplayer(Arrays.asList(Blocks.WHEAT), 5, true, true, (bp) -> mc.world.getBlockState(bp).getBlock() instanceof CropBlock cb && cb.isMature(mc.world.getBlockState(bp)));
+                    if(btodestroy.size() != 0){
+
+                        Rotations.rotate(
+                            Rotations.getYaw(btodestroy.get(0)), Rotations.getPitch(btodestroy.get(0)),
+                            50,
+                            () -> {BlockUtils.breakBlock(btodestroy.get(0), true);});
+
+                        if(seeds.found() && freplace.get()){
+                            BlockUtils.place(new BlockPos(btodestroy.get(0)), seeds, true, 0);
+                        }
+                    }
+
+
+                }
             }
 
             RendererUtils.addPoint(aUtils.closestPointOnBlock(new BlockPos(0, 100, 0)), Color.BLUE.a(50));
@@ -199,6 +231,8 @@ public class autoFarm extends Module {
 
 
     }
+
+
 
     public boolean canTillFarmland(BlockPos pos) {
         return mc.world.getBlockState(pos.up()).isAir();
